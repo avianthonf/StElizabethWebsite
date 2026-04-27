@@ -22,8 +22,8 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Content & Branding
 
 - [ ] **BRAND-01**: Replace Walker School logo/branding with St. Elizabeth High School identity
-- [ ] **BRAND-02**: Replace Walker School copy — mission statement, values, about text
-- [ ] **BRAND-03**: Replace placeholder images — use St. Elizabeth school photos (or curated stock)
+- [x] **BRAND-02**: Replace Walker School copy — mission statement, values, about text
+- [x] **BRAND-03**: Replace placeholder images — use St. Elizabeth school photos (or curated stock)
 - [ ] **BRAND-04**: Update favicon and meta tags — St. Elizabeth branding
 - [ ] **BRAND-05**: Update Walker-specific navigation links — St. Elizabeth page routes
 
@@ -112,8 +112,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FOUND-08 | Phase 1 | Pending |
 | FOUND-09 | Phase 1 | Pending |
 | BRAND-01 | Phase 2 | Pending |
-| BRAND-02 | Phase 2 | Pending |
-| BRAND-03 | Phase 2 | Pending |
+| BRAND-02 | Phase 2 | Complete |
+| BRAND-03 | Phase 2 | Complete |
 | BRAND-04 | Phase 2 | Pending |
 | BRAND-05 | Phase 2 | Pending |
 | PAGE-01 | Phase 2 | Pending |

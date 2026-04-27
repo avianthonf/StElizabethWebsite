@@ -58,7 +58,7 @@ Plans:
 
 Plans:
 - [ ] 02-01-PLAN.md — Branding core (logo, favicon, nav structure)
-- [ ] 02-02-PLAN.md — Content copy replacement (mission, values, images)
+- [x] 02-02-PLAN.md — Content copy replacement (mission, values, images)
 - [ ] 02-03-PLAN.md — Page template system + About Us page
 - [ ] 02-04-PLAN.md — Remaining interior pages (Academics, Admissions, Athletics, Arts, Contact)
 
