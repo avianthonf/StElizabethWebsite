@@ -14,7 +14,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **FOUND-03**: Fix iOS Safari mobile menu scroll lock — use `body-scroll-lock` or `react-remove-scroll`
 - [ ] **FOUND-04**: Add Vitest + React Testing Library — unit tests for hooks and utilities
 - [x] **FOUND-05**: Add Playwright E2E tests — critical user flows (navigation, scroll animations, mobile menu)
-- [ ] **FOUND-06**: Add axe-core accessibility testing — catch WCAG violations during development
+- [x] **FOUND-06**: Add axe-core accessibility testing — catch WCAG violations during development
 - [ ] **FOUND-07**: Add image optimization pipeline — build-time WebP/AVIF generation with sharp
 - [ ] **FOUND-08**: Add Next.js Image lazy loading — replace native `<img>` with `Image` component
 - [ ] **FOUND-09**: Add font preload for Montserrat/Inter — eliminate FOIT on hero sections
@@ -107,7 +107,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FOUND-03 | Phase 1 | Complete |
 | FOUND-04 | Phase 1 | Pending |
 | FOUND-05 | Phase 1 | Complete |
-| FOUND-06 | Phase 1 | Pending |
+| FOUND-06 | Phase 1 | Complete |
 | FOUND-07 | Phase 1 | Pending |
 | FOUND-08 | Phase 1 | Pending |
 | FOUND-09 | Phase 1 | Pending |

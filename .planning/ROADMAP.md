@@ -34,7 +34,7 @@
 Plans:
 - [x] 01-01-PLAN.md — Fix GSAP bugs (resize handler + plugin registration) + add Vitest unit tests
 - [x] 01-02-PLAN.md — Fix iOS Safari scroll lock + add Playwright E2E tests for mobile menu
-- [ ] 01-03-PLAN.md — Expand E2E test coverage (navigation, scroll animations, accessibility with axe-core)
+- [x] 01-03-PLAN.md — Expand E2E test coverage (navigation, scroll animations, accessibility with axe-core)
 - [ ] 01-04-PLAN.md — Image optimization pipeline + font preload (sharp, next/font/google)
 
 ---
