@@ -40,10 +40,10 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Forms & Conversion
 
 - [x] **FORM-01**: Implement contact/inquiry form — name, email, phone, message, dropdown for inquiry type
-- [ ] **FORM-02**: Add GDPR-compliant consent checkbox — required for EU visitors
+- [x] **FORM-02**: Add GDPR-compliant consent checkbox — required for EU visitors
 - [x] **FORM-03**: Add honeypot spam protection — hidden field to detect bots
 - [x] **FORM-04**: Add accessible form validation — aria-live error messages, keyboard navigation
-- [ ] **FORM-05**: Wire form to Formspree (or Netlify Forms) — submissions delivered to school email
+- [x] **FORM-05**: Wire form to Formspree (or Netlify Forms) — submissions delivered to school email
 
 ### SEO & Performance
 
@@ -124,10 +124,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PAGE-06 | Phase 2 | Pending |
 | PAGE-07 | Phase 2 | Pending |
 | FORM-01 | Phase 3 | Complete |
-| FORM-02 | Phase 3 | Pending |
+| FORM-02 | Phase 3 | Complete |
 | FORM-03 | Phase 3 | Complete |
 | FORM-04 | Phase 3 | Complete |
-| FORM-05 | Phase 3 | Pending |
+| FORM-05 | Phase 3 | Complete |
 | SEO-01 | Phase 4 | Pending |
 | SEO-02 | Phase 4 | Pending |
 | SEO-03 | Phase 4 | Pending |

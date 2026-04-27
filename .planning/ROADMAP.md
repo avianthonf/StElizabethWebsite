@@ -85,7 +85,7 @@ Plans:
 
 Plans:
 - [x] 03-01-PLAN.md — Form foundation (fields, honeypot, validation)
-- [ ] 03-02-PLAN.md — Form submission (GDPR consent, Formspree wiring)
+- [x] 03-02-PLAN.md — Form submission (GDPR consent, Formspree wiring)
 
 **UI hint:** yes
 
