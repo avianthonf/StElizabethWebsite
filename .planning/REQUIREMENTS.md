@@ -56,8 +56,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Polish & Launch
 
-- [ ] **POLISH-01**: Add 404 page — branded not-found with navigation back to homepage
-- [ ] **POLISH-02**: Add loading states — skeleton screens for below-fold sections
+- [x] **POLISH-01**: Add 404 page — branded not-found with navigation back to homepage
+- [x] **POLISH-02**: Add loading states — skeleton screens for below-fold sections
 - [ ] **POLISH-03**: Final accessibility audit — manual WCAG 2.1 testing
 - [ ] **POLISH-04**: Update README.md — St. Elizabeth setup instructions, design system docs
 - [ ] **POLISH-05**: Verify static export builds clean — `npm run build` succeeds
@@ -134,8 +134,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SEO-04 | Phase 4 | Complete |
 | SEO-05 | Phase 4 | Pending |
 | SEO-06 | Phase 4 | Pending |
-| POLISH-01 | Phase 4 | Pending |
-| POLISH-02 | Phase 4 | Pending |
+| POLISH-01 | Phase 4 | Complete |
+| POLISH-02 | Phase 4 | Complete |
 | POLISH-03 | Phase 4 | Pending |
 | POLISH-04 | Phase 4 | Pending |
 | POLISH-05 | Phase 4 | Pending |

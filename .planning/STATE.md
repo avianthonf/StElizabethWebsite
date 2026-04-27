@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: in_progress
-last_updated: "2026-04-27T16:15:57.296Z"
+status: Phase 4 Active
+last_updated: "2026-04-27T16:18:12.903Z"
 progress:
   total_phases: 4
   completed_phases: 3
@@ -52,6 +52,8 @@ progress:
 - Phase 2: BRAND-01, BRAND-02, BRAND-03, BRAND-04, BRAND-05, PAGE-01, PAGE-02, PAGE-03, PAGE-04, PAGE-05, PAGE-06, PAGE-07 (all 12 requirements)
 - Phase 3: FORM-01, FORM-02, FORM-03, FORM-04, FORM-05 (all 5 requirements)
 - Phase 4: SEO-01, SEO-03, SEO-04 (3 of 7 requirements)
+
+| Phase 04 P03 | 300 | 3 tasks | 3 files |
 
 ## Phase 4 Progress
 
@@ -118,6 +120,9 @@ progress:
 - **Phase 04-01:** JSON-LD placement in body using dangerouslySetInnerHTML - Next.js metadata API doesn't support JSON-LD directly
 - **Phase 04-01:** Static sitemap.xml instead of dynamic generation - site has fixed page structure, static file is simpler
 - **Phase 04-01:** Placeholder contact values in JSON-LD - real phone, email, and social media URLs need to be provided by school administration
+- [Phase 04-03]: Use Next.js App Router convention (not-found.tsx) for custom 404 page instead of pages/_error.js
+- [Phase 04-03]: Implement skeleton loaders with Tailwind animate-pulse instead of custom CSS animations for simplicity
+- [Phase 04-03]: Apply skeleton loaders only to below-fold sections - hero always visible for immediate visual feedback
 
 ## Technical Debt
 
@@ -148,14 +153,17 @@ progress:
 Phase 4: IN PROGRESS
 
 Completed plans:
+
 - ✅ Plan 04-01: JSON-LD structured data, sitemap.xml, and robots.txt
 
 Remaining plans:
+
 - ⏳ Plan 04-02: Performance optimization (lazy loading, code splitting)
 - ⏳ Plan 04-03: Accessibility audit and fixes
 - ⏳ Plan 04-04: Final pre-launch checklist
 
 **User action required:** 
+
 1. Update JSON-LD placeholder values in src/app/layout.tsx (phone, email, social media URLs)
 2. Create Formspree account and replace placeholder endpoint URLs in Contact and Admissions forms (see 03-02-SUMMARY.md)
 3. Submit sitemap.xml to Google Search Console and Bing Webmaster Tools after deployment
