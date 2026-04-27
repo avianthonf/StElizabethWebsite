@@ -41,6 +41,13 @@ export const metadata: Metadata = {
     siteName: "St. Elizabeth High School",
     locale: "en_IN",
     type: "website",
+    images: ["/images/hero-campus.jpg"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "St. Elizabeth High School | Pomburpa, Goa",
+    description: "A Catholic high school in Pomburpa, Goa, dedicated to academic excellence, faith formation, and service.",
+    images: ["/images/hero-campus.jpg"],
   },
   icons: {
     icon: [
@@ -57,9 +64,50 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // JSON-LD structured data for search engines
+  // Combines EducationalOrganization, HighSchool, and LocalBusiness schemas
+  // TODO: Update telephone, email, and social media URLs with actual values
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": ["EducationalOrganization", "HighSchool", "LocalBusiness"],
+    "name": "St. Elizabeth High School",
+    "alternateName": "St. Elizabeth HS Pomburpa",
+    "description": "A Catholic high school in Pomburpa, Goa, India, dedicated to academic excellence, faith formation, and service.",
+    "url": "https://stelizabethhighschool.edu.in",
+    "logo": "https://stelizabethhighschool.edu.in/images/logo.png",
+    "image": "https://stelizabethhighschool.edu.in/images/hero-campus.jpg",
+    "telephone": "+91-832-XXXXXXX",
+    "email": "info@stelizabethhighschool.edu.in",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Pomburpa",
+      "addressLocality": "Bardez",
+      "addressRegion": "Goa",
+      "postalCode": "403521",
+      "addressCountry": "IN"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 15.5626,
+      "longitude": 73.8143
+    },
+    "sameAs": [
+      "https://www.facebook.com/stelizabethhspomburpa",
+      "https://www.instagram.com/stelizabethhspomburpa"
+    ],
+    "foundingDate": "1985",
+    "priceRange": "₹₹"
+  };
+
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable} h-full antialiased`}>
-      <body className={`${inter.variable} ${playfair.variable} ${montserrat.variable} min-h-full flex flex-col font-sans antialiased`}>{children}</body>
+      <body className={`${inter.variable} ${playfair.variable} ${montserrat.variable} min-h-full flex flex-col font-sans antialiased`}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        {children}
+      </body>
     </html>
   );
 }
