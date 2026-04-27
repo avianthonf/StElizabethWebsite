@@ -1,9 +1,13 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { HeroMasked } from "@/components/sections/HeroMasked";
 import { ValueCarousel } from "@/components/sections/ValueCarousel";
 import { StickySplitSection } from "@/components/sections/StickySplitSection";
 import { DivisionsTabs } from "@/components/sections/DivisionsTabs";
 import { FooterCtaSection } from "@/components/sections/FooterCtaSection";
 import { WalkHeader } from "@/components/layout/WalkHeader";
+import { SkeletonLoader } from "@/components/ui/SkeletonLoader";
 
 // PLACEHOLDER: Using Walker School images until St. Elizabeth photos provided
 // TODO: Replace with actual St. Elizabeth High School photos
@@ -48,6 +52,12 @@ const IMAGES = {
 };
 
 export default function Home() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <>
       <WalkHeader />
@@ -57,7 +67,10 @@ export default function Home() {
         <HeroMasked heroImage={IMAGES.heroCampus} />
 
         {/* SECTION 2: We Value — scroll-linked horizontal carousel */}
-        <ValueCarousel
+        {!mounted ? (
+          <SkeletonLoader variant="section" />
+        ) : (
+          <ValueCarousel
           values={[
             {
               number: "01",
@@ -88,10 +101,14 @@ export default function Home() {
               href: "/about/values#community",
             },
           ]}
-        />
+          />
+        )}
 
         {/* SECTION 3: Accolades — sticky left / scrolling right */}
-        <StickySplitSection
+        {!mounted ? (
+          <SkeletonLoader variant="section" />
+        ) : (
+          <StickySplitSection
           overline="Recognized for Excellence"
           heading="A Legacy of Faith and Learning"
           body="For over five decades, St. Elizabeth High School has been a pillar of Catholic education in Goa. Our students excel academically, grow spiritually, and serve their community with distinction."
@@ -120,9 +137,13 @@ export default function Home() {
             IMAGES.gallery4,
           ]}
         />
+        )}
 
         {/* SECTION 4: Mission — sticky left / scrolling right */}
-        <StickySplitSection
+        {!mounted ? (
+          <SkeletonLoader variant="section" />
+        ) : (
+          <StickySplitSection
           overline="Our Purpose"
           heading="Mission & Vision"
           body="St. Elizabeth High School exists to form young men and women of faith, character, and academic excellence. Rooted in Catholic values and inspired by the example of St. Elizabeth, we prepare students to lead lives of purpose, service, and integrity."
@@ -151,6 +172,7 @@ export default function Home() {
             IMAGES.mission4,
           ]}
         />
+        )}
 
         {/* SECTION 5: Discover Your Potential — cutout panels */}
         <div style={{ backgroundColor: "var(--color-white)" }}>
