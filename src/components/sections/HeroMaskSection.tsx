@@ -3,34 +3,27 @@
 import { useRef } from 'react';
 import { useScrollProgress } from '@/lib/useScrollProgress';
 
+interface HeroMaskSectionProps {
+  heroImage?: string;
+}
+
 /**
  * Hero section with Walker-style clipping mask animation.
- * - Initially: full viewport, centered text semi-transparent white
- * - On scroll: background fades white, video visible only through text letters
- * - Then: text turns dark, section scrolls out
  */
-export function HeroMaskSection() {
+export function HeroMaskSection({ heroImage = '/images/videocover2-812-optimized.webp' }: HeroMaskSectionProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const progress = useScrollProgress({ scale: 1 });
 
-  // Map progress to visual states:
-  // 0.0 - 0.3: Text white, background dark → clip path expands
-  // 0.3 - 0.7: Background turns white, text turns dark
-  // 0.7 - 1.0: Text dark, section exits
-
   const textColor = progress < 0.35
-    ? `rgba(255, 255, 255, ${1 - progress * 3})`
+    ? `rgba(255, 255, 255, ${Math.max(0.25, 1 - progress * 3)})`
     : `rgba(51, 51, 51, ${(progress - 0.35) / 0.35})`;
 
   const overlayOpacity = progress < 0.4
     ? Math.max(0, 1 - (progress / 0.4))
     : 0;
 
-  // Clip path: starts at 0% (invisible), expands to 100% by progress 0.5
   const clipProgress = Math.min(1, progress * 2.2);
-  const clipPath = `inset(${(1 - clipProgress) * 50}% ${(1 - clipProgress) * 50}% ${(1 - clipProgress) * 50}% ${(1 - clipProgress) * 50}%)`;
-
-  const translateY = progress * -20; // Slight upward as we scroll
+  const translateY = progress * -15;
 
   return (
     <section
@@ -44,15 +37,14 @@ export function HeroMaskSection() {
         style={{ opacity: overlayOpacity }}
       />
 
-      {/* Masked image — visible only through letter shapes */}
+      {/* Masked image */}
       <div className="hero-mask-container">
         <img
-          src="/images/hero-campus.jpg"
-          alt="Walker School campus"
+          src={heroImage}
+          alt="School campus"
           className="hero-mask-image"
           style={{
-            clipPath,
-            opacity: progress < 0.6 ? 1 : 1 - (progress - 0.6) / 0.4,
+            opacity: progress < 0.7 ? 1 : 1 - (progress - 0.7) / 0.3,
           }}
         />
       </div>
@@ -65,10 +57,17 @@ export function HeroMaskSection() {
         We Believe
       </h1>
 
-      {/* Mission block — bottom left */}
+      {/* Mission block */}
       <div className="hero-mission-block">
         <p className="walker-overline">St. Elizabeth High School</p>
-        <p className="walker-display" style={{ marginTop: 8, color: 'var(--walker-gray)', fontSize: 16, fontFamily: 'var(--font-body)' }}>
+        <p style={{
+          marginTop: 8,
+          color: 'rgba(255,255,255,0.85)',
+          fontFamily: 'var(--font-body)',
+          fontSize: 16,
+          lineHeight: 1.6,
+          maxWidth: 340,
+        }}>
           Nurturing minds, hearts, and spirits through faith, excellence, and service since 1967.
         </p>
       </div>

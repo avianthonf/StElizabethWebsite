@@ -3,58 +3,50 @@
 import { useRef } from 'react';
 import { useScrollProgress } from '@/lib/useScrollProgress';
 
-const values = [
-  {
-    number: '01',
-    image: '/images/curiosity.jpg',
-    title: 'Curiosity',
-    description: 'We spark a lifelong love of learning through inquiry, exploration, and wonder.',
-  },
-  {
-    number: '02',
-    image: '/images/dignity.jpg',
-    title: 'Dignity',
-    description: 'Every person is made in the image of God and deserves respect and compassion.',
-  },
-  {
-    number: '03',
-    image: '/images/excellence.jpg',
-    title: 'Excellence',
-    description: 'We pursue the highest standards in academics, arts, athletics, and character.',
-  },
-  {
-    number: '04',
-    image: '/images/faith.jpg',
-    title: 'Faith',
-    description: 'Our Catholic identity shapes a community of prayer, service, and moral purpose.',
-  },
-  {
-    number: '05',
-    image: '/images/community.jpg',
-    title: 'Community',
-    description: 'We build bonds of friendship and belonging that last a lifetime.',
-  },
-  {
-    number: '06',
-    image: '/images/service.jpg',
-    title: 'Service',
-    description: 'We form men and women for others who use their gifts in service of the common good.',
-  },
-];
+interface ValueItem {
+  number: string;
+  image: string;
+  title: string;
+  description: string;
+}
 
-/**
- * We Value section — Walker-style scroll-linked horizontal carousel.
- * Cards slide horizontally as the user scrolls vertically.
- */
-export function ValuesScrollCarousel() {
+interface ValuesScrollCarouselProps {
+  values?: ValueItem[];
+}
+
+export function ValuesScrollCarousel({
+  values = [
+    {
+      number: '01',
+      image: '/images/Curiosity-310-optimized.webp',
+      title: 'Curiosity',
+      description: 'We spark a lifelong love of learning through inquiry, exploration, and wonder.',
+    },
+    {
+      number: '02',
+      image: '/images/dignity-311-optimized.webp',
+      title: 'Dignity',
+      description: 'Every person is made in the image of God and deserves respect and compassion.',
+    },
+    {
+      number: '03',
+      image: '/images/Honor-312-optimized.webp',
+      title: 'Honor',
+      description: 'We act with integrity — doing what\'s right even when no one is watching.',
+    },
+    {
+      number: '04',
+      image: '/images/Kindness-309-optimized.webp',
+      title: 'Kindness',
+      description: 'We build a community where everyone feels seen, valued, and supported.',
+    },
+  ],
+}: ValuesScrollCarouselProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const progress = useScrollProgress({ scale: 1 });
 
-  // Track starts at top (sticky), ends after scrolling through the section
-  // progress 0 = cards at right (off-screen), progress 1 = cards fully revealed
-  const trackTranslate = (1 - progress) * -55; // percentage
-  const trackOpacity = progress < 0.05 ? 0 : 1;
-  const trackTranslateX = `${trackTranslate}vw`;
+  // Cards start off-screen right, slide into view as we scroll
+  const trackTranslate = (1 - progress) * -55;
 
   return (
     <section
@@ -70,7 +62,6 @@ export function ValuesScrollCarousel() {
 
       {/* Sticky carousel track */}
       <div
-        className="values-scroll-track-wrapper"
         style={{
           position: 'sticky',
           top: 0,
@@ -83,9 +74,8 @@ export function ValuesScrollCarousel() {
         <div
           className="values-scroll-track"
           style={{
-            transform: `translateX(${trackTranslateX})`,
-            opacity: trackOpacity,
-            transition: 'opacity 0.2s',
+            transform: `translateX(${trackTranslate}vw)`,
+            opacity: progress < 0.05 ? 0 : 1,
           }}
         >
           {values.map((value) => (

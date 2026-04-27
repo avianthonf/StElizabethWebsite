@@ -2,20 +2,21 @@
 
 import { ChevronRight } from 'lucide-react';
 
-/**
- * Footer CTA Section — Walker-style full-width video/image background
- * with massive centered "ADMISSION" heading and dual buttons.
- */
-export function FooterCtaSection() {
+interface FooterCtaSectionProps {
+  campusImage?: string;
+}
+
+export function FooterCtaSection({
+  campusImage = '/images/tws_fall2448-980-optimized.webp',
+}: FooterCtaSectionProps) {
   return (
     <section className="footer-cta-section" style={{ minHeight: '80vh' }}>
-      {/* Background image — use a placeholder from our images */}
+      {/* Background image */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(135deg, var(--walker-black) 0%, #1a1a2e 50%, var(--brand-maroon) 100%)',
-          backgroundImage: 'url(/images/campus-aerial.jpg)',
+          backgroundImage: `url(${campusImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
@@ -48,18 +49,10 @@ export function FooterCtaSection() {
           <span>Pomburpa, Bardez, Goa 403523</span>
         </div>
         <div className="footer-social-icons">
-          <a href="#" className="footer-social-icon" aria-label="YouTube">
-            YT
-          </a>
-          <a href="#" className="footer-social-icon" aria-label="LinkedIn">
-            IN
-          </a>
-          <a href="#" className="footer-social-icon" aria-label="Facebook">
-            f
-          </a>
-          <a href="#" className="footer-social-icon" aria-label="Instagram">
-            ig
-          </a>
+          <a href="#" className="footer-social-icon" aria-label="YouTube">YT</a>
+          <a href="#" className="footer-social-icon" aria-label="LinkedIn">IN</a>
+          <a href="#" className="footer-social-icon" aria-label="Facebook">f</a>
+          <a href="#" className="footer-social-icon" aria-label="Instagram">ig</a>
         </div>
       </div>
     </section>

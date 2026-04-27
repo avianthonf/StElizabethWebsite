@@ -13,8 +13,9 @@ interface StickySplitSectionProps {
   heading: string;
   body: string;
   accordion: AccordionItem[];
-  backgroundColor?: 'white' | 'light';
+  leftImage?: string | null;
   rightImages?: string[];
+  backgroundColor?: 'white' | 'light';
 }
 
 export function StickySplitSection({
@@ -22,21 +23,41 @@ export function StickySplitSection({
   heading,
   body,
   accordion,
-  backgroundColor = 'white',
+  leftImage,
   rightImages = [],
+  backgroundColor = 'white',
 }: StickySplitSectionProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-
   const bg = backgroundColor === 'light' ? 'var(--walker-gray-light)' : 'var(--walker-white)';
 
   return (
     <section
-      className="sticky-split-section"
-      style={{ backgroundColor: bg }}
+      style={{
+        backgroundColor: bg,
+        minHeight: '100vh',
+      }}
     >
-      <div className="walker-container" style={{ display: 'grid', gridTemplateColumns: '40% 60%', minHeight: '100vh' }}>
+      <div
+        className="walker-container"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '40% 60%',
+          minHeight: '100vh',
+        }}
+      >
         {/* LEFT — Sticky */}
-        <div className="sticky-split-left">
+        <div
+          style={{
+            position: 'sticky',
+            top: 0,
+            height: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            padding: 'var(--section-padding-y) 0',
+            paddingRight: 'clamp(24px, 4vw, 60px)',
+          }}
+        >
           <p className="walker-overline" style={{ marginBottom: 24 }}>
             {overline}
           </p>
@@ -44,7 +65,7 @@ export function StickySplitSection({
           <h2
             className="walker-heading"
             style={{
-              fontSize: 'clamp(32px, 4vw, 60px)',
+              fontSize: 'clamp(28px, 3.5vw, 52px)',
               marginBottom: 32,
               lineHeight: 1.05,
             }}
@@ -52,7 +73,7 @@ export function StickySplitSection({
             {heading}
           </h2>
 
-          <p className="walker-body" style={{ maxWidth: 440, marginBottom: 40 }}>
+          <p className="walker-body" style={{ maxWidth: 420, marginBottom: 40 }}>
             {body}
           </p>
 
@@ -76,9 +97,16 @@ export function StickySplitSection({
                   />
                 </button>
                 <div
-                  className={`walker-accordion-content ${openIndex === i ? 'open' : ''}`}
+                  style={{
+                    overflow: 'hidden',
+                    maxHeight: openIndex === i ? '300px' : '0',
+                    transition: 'max-height 0.4s ease',
+                  }}
                 >
-                  <p className="walker-body" style={{ padding: '16px 0', fontSize: 15 }}>
+                  <p
+                    className="walker-body"
+                    style={{ padding: '16px 0', fontSize: 15 }}
+                  >
                     {item.content}
                   </p>
                 </div>
@@ -87,17 +115,38 @@ export function StickySplitSection({
           </div>
         </div>
 
-        {/* RIGHT — Scrolling */}
-        <div className="sticky-split-right" style={{ paddingTop: 'var(--section-padding-y)' }}>
+        {/* RIGHT — Scrolling content */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            padding: 'var(--section-padding-y) 0',
+            paddingLeft: 'clamp(20px, 4vw, 60px)',
+          }}
+        >
+          {/* Optional left portrait image */}
+          {leftImage && (
+            <div style={{ width: '100%', marginBottom: 40 }}>
+              <img
+                src={leftImage}
+                alt="Student"
+                style={{
+                  width: '100%',
+                  maxHeight: '65vh',
+                  objectFit: 'cover',
+                  borderRadius: 4,
+                }}
+              />
+            </div>
+          )}
+
+          {/* Staggered masonry grid */}
           <div className="staggered-images">
             {rightImages.map((src, i) => (
               <img
                 key={i}
                 src={src}
                 alt={`Gallery image ${i + 1}`}
-                style={{
-                  animationDelay: `${i * 0.1}s`,
-                }}
               />
             ))}
           </div>
