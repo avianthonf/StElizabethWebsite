@@ -1,12 +1,60 @@
-import type { Metadata } from 'next';
-import { ContentPage, PageHero } from '@/components/templates/ContentPage';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'Admissions | St. Elizabeth High School',
-  description: 'Join the St. Elizabeth High School community. Learn about our admission process, requirements, and how to apply for grades 8-12.',
-};
+import type { Metadata } from 'next';
+import { useState, useRef, FormEvent } from 'react';
+import { ContentPage, PageHero } from '@/components/templates/ContentPage';
+import { validateAdmissionsForm, isHoneypotFilled, type AdmissionsFormData, type FormErrors } from '@/lib/form-validation';
 
 export default function AdmissionsPage() {
+  const [formData, setFormData] = useState<AdmissionsFormData>({
+    parentName: '',
+    email: '',
+    phone: '',
+    studentGrade: '',
+    message: '',
+    website: '', // honeypot
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const firstErrorRef = useRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (isHoneypotFilled(formData.website)) {
+      console.warn('Honeypot triggered - bot detected');
+      return;
+    }
+
+    const validationErrors = validateAdmissionsForm(formData);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      setTimeout(() => firstErrorRef.current?.focus(), 100);
+      return;
+    }
+
+    setIsSubmitting(true);
+    console.log('Form valid, ready for submission:', formData);
+    setIsSubmitting(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    if (e.key === 'Escape') {
+      setErrors({});
+    }
+  };
   return (
     <ContentPage>
       <PageHero
@@ -113,31 +161,37 @@ export default function AdmissionsPage() {
             to schedule a campus visit and answer your questions.
           </p>
 
-          {/* Form - Disabled for Phase 3 */}
+          {/* Inquiry Form */}
           <div
             style={{
               backgroundColor: 'var(--color-bg-light)',
               padding: 40,
               borderRadius: 8,
-              border: '2px dashed var(--color-primary-maroon)',
             }}
           >
-            <p
-              style={{
-                fontSize: 14,
-                color: 'var(--color-primary-maroon)',
-                marginBottom: 24,
-                fontWeight: 600,
-                textAlign: 'center',
-              }}
-            >
-              ⚠️ Form integration coming in Phase 3 (Requirements FORM-01 through FORM-05)
-            </p>
+            {/* Aria-live region for screen reader announcements */}
+            <div aria-live="polite" aria-atomic="true" style={{ position: 'absolute', left: '-9999px' }}>
+              {Object.keys(errors).length > 0 && `Form has ${Object.keys(errors).length} error${Object.keys(errors).length > 1 ? 's' : ''}`}
+            </div>
 
-            <form style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {/* Honeypot field - hidden from users */}
+              <div style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' }} aria-hidden="true">
+                <label htmlFor="website">Leave this field blank</label>
+                <input
+                  type="text"
+                  id="website"
+                  name="website"
+                  value={formData.website}
+                  onChange={handleChange}
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
+              </div>
+
               <div>
                 <label
-                  htmlFor="parent-name"
+                  htmlFor="parentName"
                   style={{
                     display: 'block',
                     fontSize: 14,
@@ -150,18 +204,28 @@ export default function AdmissionsPage() {
                 </label>
                 <input
                   type="text"
-                  id="parent-name"
-                  name="parent-name"
-                  disabled
+                  id="parentName"
+                  name="parentName"
+                  value={formData.parentName}
+                  onChange={handleChange}
+                  aria-required="true"
+                  aria-invalid={!!errors.parentName}
+                  aria-describedby={errors.parentName ? 'parentName-error' : undefined}
+                  ref={errors.parentName ? firstErrorRef : undefined}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: 15,
-                    border: '1px solid #ddd',
+                    border: `1px solid ${errors.parentName ? 'var(--color-primary-maroon)' : '#ddd'}`,
                     borderRadius: 4,
-                    backgroundColor: '#f9f9f9',
+                    backgroundColor: 'var(--color-white)',
                   }}
                 />
+                {errors.parentName && (
+                  <p id="parentName-error" style={{ fontSize: 14, color: 'var(--color-primary-maroon)', marginTop: 4 }} role="alert">
+                    {errors.parentName}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -181,16 +245,26 @@ export default function AdmissionsPage() {
                   type="email"
                   id="email"
                   name="email"
-                  disabled
+                  value={formData.email}
+                  onChange={handleChange}
+                  aria-required="true"
+                  aria-invalid={!!errors.email}
+                  aria-describedby={errors.email ? 'email-error' : undefined}
+                  ref={errors.email && !errors.parentName ? firstErrorRef : undefined}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: 15,
-                    border: '1px solid #ddd',
+                    border: `1px solid ${errors.email ? 'var(--color-primary-maroon)' : '#ddd'}`,
                     borderRadius: 4,
-                    backgroundColor: '#f9f9f9',
+                    backgroundColor: 'var(--color-white)',
                   }}
                 />
+                {errors.email && (
+                  <p id="email-error" style={{ fontSize: 14, color: 'var(--color-primary-maroon)', marginTop: 4 }} role="alert">
+                    {errors.email}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -210,21 +284,31 @@ export default function AdmissionsPage() {
                   type="tel"
                   id="phone"
                   name="phone"
-                  disabled
+                  value={formData.phone}
+                  onChange={handleChange}
+                  aria-required="true"
+                  aria-invalid={!!errors.phone}
+                  aria-describedby={errors.phone ? 'phone-error' : undefined}
+                  ref={errors.phone && !errors.parentName && !errors.email ? firstErrorRef : undefined}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: 15,
-                    border: '1px solid #ddd',
+                    border: `1px solid ${errors.phone ? 'var(--color-primary-maroon)' : '#ddd'}`,
                     borderRadius: 4,
-                    backgroundColor: '#f9f9f9',
+                    backgroundColor: 'var(--color-white)',
                   }}
                 />
+                {errors.phone && (
+                  <p id="phone-error" style={{ fontSize: 14, color: 'var(--color-primary-maroon)', marginTop: 4 }} role="alert">
+                    {errors.phone}
+                  </p>
+                )}
               </div>
 
               <div>
                 <label
-                  htmlFor="student-grade"
+                  htmlFor="studentGrade"
                   style={{
                     display: 'block',
                     fontSize: 14,
@@ -236,16 +320,21 @@ export default function AdmissionsPage() {
                   Student Grade Level *
                 </label>
                 <select
-                  id="student-grade"
-                  name="student-grade"
-                  disabled
+                  id="studentGrade"
+                  name="studentGrade"
+                  value={formData.studentGrade}
+                  onChange={handleChange}
+                  aria-required="true"
+                  aria-invalid={!!errors.studentGrade}
+                  aria-describedby={errors.studentGrade ? 'studentGrade-error' : undefined}
+                  ref={errors.studentGrade && !errors.parentName && !errors.email && !errors.phone ? firstErrorRef : undefined}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: 15,
-                    border: '1px solid #ddd',
+                    border: `1px solid ${errors.studentGrade ? 'var(--color-primary-maroon)' : '#ddd'}`,
                     borderRadius: 4,
-                    backgroundColor: '#f9f9f9',
+                    backgroundColor: 'var(--color-white)',
                   }}
                 >
                   <option value="">Select grade</option>
@@ -255,6 +344,11 @@ export default function AdmissionsPage() {
                   <option value="11">Grade 11</option>
                   <option value="12">Grade 12</option>
                 </select>
+                {errors.studentGrade && (
+                  <p id="studentGrade-error" style={{ fontSize: 14, color: 'var(--color-primary-maroon)', marginTop: 4 }} role="alert">
+                    {errors.studentGrade}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -274,14 +368,15 @@ export default function AdmissionsPage() {
                   id="message"
                   name="message"
                   rows={4}
-                  disabled
+                  value={formData.message}
+                  onChange={handleChange}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: 15,
                     border: '1px solid #ddd',
                     borderRadius: 4,
-                    backgroundColor: '#f9f9f9',
+                    backgroundColor: 'var(--color-white)',
                     fontFamily: 'inherit',
                   }}
                 />
@@ -289,19 +384,20 @@ export default function AdmissionsPage() {
 
               <button
                 type="submit"
-                disabled
+                disabled={isSubmitting}
                 style={{
                   padding: '14px 32px',
                   fontSize: 15,
                   fontWeight: 600,
-                  backgroundColor: '#ccc',
-                  color: '#666',
+                  backgroundColor: isSubmitting ? '#999' : 'var(--color-primary-maroon)',
+                  color: 'var(--color-white)',
                   border: 'none',
                   borderRadius: 4,
-                  cursor: 'not-allowed',
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                  transition: 'background-color 0.2s',
                 }}
               >
-                Form submission coming in Phase 3
+                {isSubmitting ? 'Validating...' : 'Submit Inquiry'}
               </button>
             </form>
           </div>
