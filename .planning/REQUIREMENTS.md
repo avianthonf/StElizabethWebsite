@@ -48,10 +48,10 @@ Requirements for initial release. Each maps to roadmap phases.
 ### SEO & Performance
 
 - [x] **SEO-01**: Add LocalBusiness + EducationalOrganization schema — JSON-LD structured data
-- [ ] **SEO-02**: Add Open Graph and Twitter Card meta tags — social sharing previews
+- [x] **SEO-02**: Add Open Graph and Twitter Card meta tags — social sharing previews
 - [x] **SEO-03**: Add sitemap.xml — all public pages indexed by search engines
 - [x] **SEO-04**: Add robots.txt — allow search engine crawling
-- [ ] **SEO-05**: Add breadcrumbs — on interior pages for navigation hierarchy
+- [x] **SEO-05**: Add breadcrumbs — on interior pages for navigation hierarchy
 - [ ] **SEO-06**: Performance budget — LCP < 2.5s, CLS < 0.1, FID < 100ms
 
 ### Polish & Launch
@@ -129,10 +129,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FORM-04 | Phase 3 | Complete |
 | FORM-05 | Phase 3 | Complete |
 | SEO-01 | Phase 4 | Complete |
-| SEO-02 | Phase 4 | Pending |
+| SEO-02 | Phase 4 | Complete |
 | SEO-03 | Phase 4 | Complete |
 | SEO-04 | Phase 4 | Complete |
-| SEO-05 | Phase 4 | Pending |
+| SEO-05 | Phase 4 | Complete |
 | SEO-06 | Phase 4 | Pending |
 | POLISH-01 | Phase 4 | Complete |
 | POLISH-02 | Phase 4 | Complete |
