@@ -92,24 +92,24 @@ export default function Home() {
 
         {/* SECTION 3: Accolades — sticky left / scrolling right */}
         <StickySplitSection
-          overline="That's Why, For the Eighth Year in a Row"
-          heading="Cobb County's Best Private School"
-          body="Parents consistently choose The Walker School for its exceptional academics, caring community, and values-driven environment. Our students thrive because of our commitment to the whole person — mind, body, and spirit."
+          overline="Recognized for Excellence"
+          heading="A Legacy of Faith and Learning"
+          body="For over five decades, St. Elizabeth High School has been a pillar of Catholic education in Goa. Our students excel academically, grow spiritually, and serve their community with distinction."
           accordion={[
             {
-              title: "Academic Excellence",
+              title: "Academic Achievement",
               content:
-                "Our students consistently score in the top percentiles on national assessments and gain admission to the most selective colleges and universities.",
+                "Our students consistently achieve top results in SSC and HSC examinations, with many gaining admission to India's premier universities and colleges.",
             },
             {
-              title: "Athletics & Arts",
+              title: "Faith Formation",
               content:
-                "State championships, national recognition in the arts, and a full range of extracurricular activities ensure every student finds their passion.",
+                "Daily prayer, regular Mass, retreats, and service projects form the spiritual foundation of our school community. Students grow in their relationship with Christ and the Church.",
             },
             {
-              title: "Community & Values",
+              title: "Community Impact",
               content:
-                "Parent satisfaction surveys consistently show that our families choose Walker for the caring community, Christian environment, and excellent teachers.",
+                "Through service learning and outreach programs, our students make a tangible difference in Pomburpa and surrounding communities, living out the Gospel call to serve.",
             },
           ]}
           leftImage={IMAGES.studentPortrait}
@@ -123,19 +123,24 @@ export default function Home() {
 
         {/* SECTION 4: Mission — sticky left / scrolling right */}
         <StickySplitSection
-          overline="Discovering"
-          heading="Our Mission"
-          body="The Walker School exists to inspire and equip students to pursue excellence in academics, character, and service — forming men and women who make a difference in the world."
+          overline="Our Purpose"
+          heading="Mission & Vision"
+          body="St. Elizabeth High School exists to form young men and women of faith, character, and academic excellence. Rooted in Catholic values and inspired by the example of St. Elizabeth, we prepare students to lead lives of purpose, service, and integrity."
           accordion={[
             {
-              title: "Our Story",
+              title: "Our History",
               content:
-                "Founded in 1965, The Walker School has grown from a small Christian academy into one of the region's most respected independent schools, serving students from PK3 through 12th grade.",
+                "Founded in the heart of Goa, St. Elizabeth High School has served generations of families in Pomburpa and throughout the region. Our commitment to Catholic education and academic excellence has remained constant through decades of growth and change.",
             },
             {
-              title: "Our Faith",
+              title: "Our Catholic Identity",
               content:
-                "As a Christian school, we integrate faith into every aspect of learning. Weekly chapel, service projects, and a faculty committed to spiritual formation are central to the Walker experience.",
+                "As a Catholic school, we integrate faith into every aspect of learning. Daily prayer, religious education, sacramental preparation, and service to others form the heart of the St. Elizabeth experience.",
+            },
+            {
+              title: "Our Vision",
+              content:
+                "We envision graduates who are intellectually curious, spiritually grounded, and committed to serving others. Our students leave St. Elizabeth prepared for higher education and equipped to make a positive impact in their communities.",
             },
           ]}
           leftImage={null}
