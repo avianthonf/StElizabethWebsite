@@ -109,7 +109,7 @@ Plans:
 **Plans:** 4 plans in 2 waves
 
 Plans:
-- [ ] 04-01-PLAN.md — SEO infrastructure (JSON-LD schema, sitemap.xml, robots.txt)
+- [x] 04-01-PLAN.md — SEO infrastructure (JSON-LD schema, sitemap.xml, robots.txt)
 - [ ] 04-02-PLAN.md — Social meta tags and breadcrumbs (Twitter Cards, Open Graph, breadcrumb navigation)
 - [ ] 04-03-PLAN.md — Polish features (branded 404 page, skeleton loading states)
 - [ ] 04-04-PLAN.md — Final verification (accessibility audit, README documentation, build validation)
