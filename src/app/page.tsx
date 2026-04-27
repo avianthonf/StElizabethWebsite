@@ -152,7 +152,7 @@ export default function Home() {
           ]}
         />
 
-        {/* SECTION 5: Discover Your Passions — cutout panels */}
+        {/* SECTION 5: Discover Your Potential — cutout panels */}
         <div style={{ backgroundColor: "var(--color-white)" }}>
           <div
             className="walker-container"
@@ -168,7 +168,7 @@ export default function Home() {
               className="walker-heading"
               style={{ fontSize: "clamp(36px, 5vw, 72px)", marginBottom: 40 }}
             >
-              Discover Your Passions
+              Discover Your Potential
             </h2>
           </div>
 
@@ -178,7 +178,7 @@ export default function Home() {
             textColor="var(--color-white)"
             number="01"
             label="Athletics"
-            description="From state championships to personal bests, our athletic program builds character through competition. 23 sports, 70+ teams, and a philosophy that prioritizes both excellence and sportsmanship."
+            description="From football to athletics, our sports programs build discipline, teamwork, and physical fitness. Students compete at district and state levels while developing character through sportsmanship."
             image={IMAGES.athleticsCutout}
             imagePosition="left"
           />
@@ -188,8 +188,8 @@ export default function Home() {
             bg="var(--color-white)"
             textColor="var(--color-text-dark)"
             number="02"
-            label="Arts"
-            description="Creativity flourishes here — from award-winning theatre productions to studio art exhibitions. Every student participates in the arts, developing confidence, expression, and an appreciation for beauty."
+            label="Arts & Music"
+            description="Creativity flourishes through music, drama, and visual arts. Our students perform in concerts, stage productions, and art exhibitions, discovering their talents and building confidence."
             image={IMAGES.artsCutout}
             imagePosition="right"
           />
@@ -200,8 +200,8 @@ export default function Home() {
             textColor="var(--color-white)"
             number="03"
             label="Academics"
-            description="Rigorous college-preparatory curriculum, dedicated faculty, and a culture of high expectations. Our students consistently gain admission to the nation's most selective colleges and universities."
-            image={IMAGES.emmyCutout}
+            description="Rigorous curriculum aligned with SSC and HSC standards prepares students for university success. Our dedicated faculty challenge students to think critically and pursue excellence in every subject."
+            image={IMAGES.academicsCutout}
             imagePosition="left"
           />
         </div>
@@ -210,40 +210,49 @@ export default function Home() {
         <DivisionsTabs
           divisions={[
             {
-              id: "primary",
-              label: "Primary School",
-              heading: "Primary School",
+              id: "grade-8",
+              label: "Grade 8",
+              heading: "Grade 8",
               description:
-                "Our youngest learners grow in confidence through a nurturing environment that balances academic preparation with creative play and social-emotional development. Our primary school builds the foundation for a lifetime of learning.",
-              image: IMAGES.primarySchool,
-              cta: "Discover Primary School",
+                "Students begin their high school journey with a strong foundation in core subjects. Grade 8 emphasizes study skills, time management, and the transition to more rigorous academic expectations.",
+              image: IMAGES.grade8,
+              cta: "Learn About Grade 8",
             },
             {
-              id: "lower",
-              label: "Lower School",
-              heading: "Lower School",
+              id: "grade-9",
+              label: "Grade 9",
+              heading: "Grade 9",
               description:
-                "Students develop strong literacy, numeracy, and critical thinking skills while exploring arts, athletics, and service. Our lower school fosters curiosity, responsibility, and a love of learning.",
-              image: IMAGES.lowerSchool,
-              cta: "Discover Lower School",
+                "Building on foundational skills, Grade 9 students explore diverse subjects and begin to identify their academic strengths and interests. Extracurricular involvement deepens.",
+              image: IMAGES.grade9,
+              cta: "Learn About Grade 9",
             },
             {
-              id: "middle",
-              label: "Middle School",
-              heading: "Middle School",
+              id: "grade-10",
+              label: "Grade 10 (SSC)",
+              heading: "Grade 10 — SSC Board",
               description:
-                "Adolescents navigate a pivotal transition with the guidance of dedicated teachers who know them well. Our middle school cultivates independence, resilience, and deeper intellectual engagement.",
-              image: IMAGES.middleSchool,
-              cta: "Discover Middle School",
+                "The SSC year is a milestone. Students prepare for board examinations with focused study, practice tests, and teacher support. Success in SSC opens doors to higher secondary education.",
+              image: IMAGES.grade10,
+              cta: "Learn About Grade 10",
             },
             {
-              id: "upper",
-              label: "Upper School",
-              heading: "Upper School",
+              id: "grade-11",
+              label: "Grade 11",
+              heading: "Grade 11",
               description:
-                "Our rigorous college-preparatory program challenges students to excel academically while forming their character and faith. Upper schoolers graduate ready for higher education and lives of purpose.",
-              image: IMAGES.upperSchool,
-              cta: "Discover Upper School",
+                "Students choose their stream (Science, Commerce, or Arts) and begin specialized study. Grade 11 builds the foundation for HSC board exams and university preparation.",
+              image: IMAGES.grade11,
+              cta: "Learn About Grade 11",
+            },
+            {
+              id: "grade-12",
+              label: "Grade 12 (HSC)",
+              heading: "Grade 12 — HSC Board",
+              description:
+                "The culmination of high school. Grade 12 students prepare for HSC board exams, apply to universities, and prepare for the next chapter. Our seniors leave ready for college and life.",
+              image: IMAGES.grade12,
+              cta: "Learn About Grade 12",
             },
           ]}
         />
