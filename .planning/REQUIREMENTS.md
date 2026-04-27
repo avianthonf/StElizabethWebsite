@@ -11,9 +11,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **FOUND-01**: Fix GSAP horizontal scroll resize handler — recalculate travel distance on window resize with debounce
 - [ ] **FOUND-02**: Fix GSAP plugin double-registration — singleton pattern for ScrollTrigger registration
-- [ ] **FOUND-03**: Fix iOS Safari mobile menu scroll lock — use `body-scroll-lock` or `react-remove-scroll`
+- [x] **FOUND-03**: Fix iOS Safari mobile menu scroll lock — use `body-scroll-lock` or `react-remove-scroll`
 - [ ] **FOUND-04**: Add Vitest + React Testing Library — unit tests for hooks and utilities
-- [ ] **FOUND-05**: Add Playwright E2E tests — critical user flows (navigation, scroll animations, mobile menu)
+- [x] **FOUND-05**: Add Playwright E2E tests — critical user flows (navigation, scroll animations, mobile menu)
 - [ ] **FOUND-06**: Add axe-core accessibility testing — catch WCAG violations during development
 - [ ] **FOUND-07**: Add image optimization pipeline — build-time WebP/AVIF generation with sharp
 - [ ] **FOUND-08**: Add Next.js Image lazy loading — replace native `<img>` with `Image` component
@@ -104,9 +104,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | FOUND-01 | Phase 1 | Pending |
 | FOUND-02 | Phase 1 | Pending |
-| FOUND-03 | Phase 1 | Pending |
+| FOUND-03 | Phase 1 | Complete |
 | FOUND-04 | Phase 1 | Pending |
-| FOUND-05 | Phase 1 | Pending |
+| FOUND-05 | Phase 1 | Complete |
 | FOUND-06 | Phase 1 | Pending |
 | FOUND-07 | Phase 1 | Pending |
 | FOUND-08 | Phase 1 | Pending |
