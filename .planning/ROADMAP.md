@@ -81,7 +81,11 @@ Plans:
 4. School receives form submissions via email without spam (honeypot protection blocks bots)
 5. User can navigate entire form using only keyboard (Tab, Enter, Escape) without mouse
 
-**Plans:** TBD
+**Plans:** 2 plans in 2 waves
+
+Plans:
+- [ ] 03-01-PLAN.md — Form foundation (fields, honeypot, validation)
+- [ ] 03-02-PLAN.md — Form submission (GDPR consent, Formspree wiring)
 
 **UI hint:** yes
 
