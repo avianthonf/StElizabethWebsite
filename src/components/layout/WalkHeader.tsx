@@ -5,6 +5,7 @@ import { gsap } from '@/lib/gsap-config';
 import { siteNavigation } from '@/lib/site-navigation';
 import { Menu, X, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { RemoveScroll } from 'react-remove-scroll';
 
 /**
  * Walker Header — "Ghost Nav" behavior (SOP-001 + Blueprint).
@@ -31,10 +32,16 @@ export function WalkHeader() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Lock body scroll when mobile menu open
+  // Close mobile menu on Escape key
   useEffect(() => {
-    document.body.style.overflow = mobileOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && mobileOpen) {
+        setMobileOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
   }, [mobileOpen]);
 
   const isTransparent = !scrolled && !mobileOpen;
@@ -180,7 +187,8 @@ export function WalkHeader() {
                 cursor: 'pointer',
                 color: textColor,
               }}
-              aria-label="Open menu"
+              aria-label="Toggle menu"
+              aria-expanded={mobileOpen}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                 <div style={{ width: 24, height: 2, background: 'currentColor' }} />
@@ -204,9 +212,10 @@ export function WalkHeader() {
       </header>
 
       {/* Mobile Menu — Full-screen overlay */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
+      <RemoveScroll enabled={mobileOpen}>
+        <AnimatePresence>
+          {mobileOpen && (
+            <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
@@ -309,6 +318,7 @@ export function WalkHeader() {
           </motion.div>
         )}
       </AnimatePresence>
+    </RemoveScroll>
     </>
   );
 }
