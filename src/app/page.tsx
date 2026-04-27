@@ -66,9 +66,9 @@ function ValueCard({ item }: { item: typeof values[0] }) {
   return (
     <article
       style={{
-        flexShrink: 0,
-        width: 'clamp(240px, 22vw, 320px)',
-        padding: '0 clamp(16px, 2vw, 32px)',
+        display: 'flex',
+        flexDirection: 'column',
+        width: '100%',
       }}
     >
       <div style={{ position: 'relative', marginBottom: 16 }}>
@@ -496,7 +496,7 @@ export default function Home() {
           <div
             style={{
               minWidth: '100vw',
-              height: '100vh',
+              minHeight: '100vh',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
@@ -518,7 +518,14 @@ export default function Home() {
             >
               We Value
             </h2>
-            <div style={{ display: 'flex', gap: 0 }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                gap: 'clamp(16px, 3vw, 32px)',
+              }}
+              className="values-grid"
+            >
               {values.map((item) => (
                 <ValueCard key={item.number} item={item} />
               ))}
