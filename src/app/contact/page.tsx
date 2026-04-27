@@ -9,6 +9,7 @@ import { ContentPage, PageHero } from '@/components/templates/ContentPage';
 import { MapPin, Phone, Mail, Clock } from 'lucide-react';
 import { validateContactForm, isHoneypotFilled, type ContactFormData, type FormErrors } from '@/lib/form-validation';
 import { GdprConsent } from '@/components/ui/GdprConsent';
+import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState<ContactFormData>({
@@ -132,6 +133,7 @@ export default function ContactPage() {
   };
   return (
     <ContentPage>
+      <Breadcrumbs items={[{ label: 'Contact', href: '/contact' }]} />
       <PageHero
         title="Contact Us"
         description="Get in Touch"

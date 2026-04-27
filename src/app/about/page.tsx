@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { ContentPage, PageHero } from '@/components/templates/ContentPage';
 import { StickySplitSection } from '@/components/sections/StickySplitSection';
+import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 
 export const metadata: Metadata = {
   title: 'About Us | St. Elizabeth High School',
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <ContentPage>
+      <Breadcrumbs items={[{ label: 'About Us', href: '/about' }]} />
       <PageHero
         title="About St. Elizabeth High School"
         description="A legacy of faith, excellence, and service in Catholic education"

@@ -8,6 +8,7 @@ import { useState, useRef, FormEvent } from 'react';
 import { ContentPage, PageHero } from '@/components/templates/ContentPage';
 import { validateAdmissionsForm, isHoneypotFilled, type AdmissionsFormData, type FormErrors } from '@/lib/form-validation';
 import { GdprConsent } from '@/components/ui/GdprConsent';
+import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 
 export default function AdmissionsPage() {
   const [formData, setFormData] = useState<AdmissionsFormData>({
@@ -121,6 +122,7 @@ export default function AdmissionsPage() {
   };
   return (
     <ContentPage>
+      <Breadcrumbs items={[{ label: 'Admissions', href: '/admissions' }]} />
       <PageHero
         title="Admissions"
         description="Join Our Community"

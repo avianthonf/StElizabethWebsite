@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { ContentPage, PageHero } from '@/components/templates/ContentPage';
+import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 
 export const metadata: Metadata = {
   title: 'Arts | St. Elizabeth High School',
@@ -9,6 +10,7 @@ export const metadata: Metadata = {
 export default function ArtsPage() {
   return (
     <ContentPage>
+      <Breadcrumbs items={[{ label: 'Arts', href: '/arts' }]} />
       <PageHero
         title="Arts"
         description="Creativity & Expression"
