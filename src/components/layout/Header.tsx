@@ -2,50 +2,7 @@
 
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
-
-const navItems = [
-  {
-    label: "About Us",
-    href: "/about",
-    submenu: [
-      { label: "Our Story", href: "/about/history" },
-      { label: "Mission & Vision", href: "/about/mission" },
-      { label: "Principal's Desk", href: "/about/principal" },
-    ],
-  },
-  {
-    label: "Admissions",
-    href: "/admissions",
-    submenu: [
-      { label: "Apply Online", href: "/admissions/apply" },
-      { label: "Fee Structure", href: "/admissions/fees" },
-      { label: "Schedule a Visit", href: "/admissions/visit" },
-    ],
-  },
-  {
-    label: "Academics",
-    href: "/academics",
-    submenu: [
-      { label: "Curriculum", href: "/academics/curriculum" },
-      { label: "Departments", href: "/academics/departments" },
-      { label: "Faculty", href: "/academics/faculty" },
-    ],
-  },
-  {
-    label: "Student Life",
-    href: "/student-life",
-    submenu: [
-      { label: "Activities", href: "/student-life/activities" },
-      { label: "Sports", href: "/student-life/sports" },
-      { label: "Events", href: "/student-life/events" },
-    ],
-  },
-  {
-    label: "Contact",
-    href: "/contact",
-    submenu: [],
-  },
-];
+import { siteNavigation } from "@/lib/site-navigation";
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -81,23 +38,23 @@ export function Header() {
 
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center gap-1">
-          {navItems.map((item) => (
+          {siteNavigation.map((item) => (
             <div key={item.label} className="relative group">
               <a
                 href={item.href}
                 className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-[#002147] hover:text-[#800000] transition-colors"
               >
                 {item.label}
-                {item.submenu.length > 0 && (
+                {item.children && item.children.length > 0 && (
                   <svg className="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 )}
               </a>
-              {item.submenu.length > 0 && (
+              {item.children && item.children.length > 0 && (
                 <div className="absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                   <div className="bg-white shadow-lg rounded-md border border-zinc-100 py-2 min-w-[200px]">
-                    {item.submenu.map((sub) => (
+                    {item.children.map((sub) => (
                       <a
                         key={sub.href}
                         href={sub.href}
@@ -112,7 +69,7 @@ export function Header() {
             </div>
           ))}
           <a
-            href="/admissions/apply"
+            href="/admission/apply"
             className="ml-4 px-5 py-2 bg-[#800000] text-white text-sm font-medium rounded-full hover:bg-[#5c0000] transition-colors"
           >
             Apply Now
@@ -133,21 +90,21 @@ export function Header() {
       {mobileOpen && (
         <div className="lg:hidden bg-white border-t border-zinc-100">
           <nav className="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-2">
-            {navItems.map((item) => (
+            {siteNavigation.map((item) => (
               <div key={item.label}>
                 <a
                   href={item.href}
                   className="block py-2 text-sm font-medium text-[#002147] border-b border-zinc-100"
                   onClick={() => {
-                    if (item.submenu.length === 0) setMobileOpen(false);
+                    if (!item.children || item.children.length === 0) setMobileOpen(false);
                     else setOpenSubmenu(openSubmenu === item.label ? null : item.label);
                   }}
                 >
                   {item.label}
                 </a>
-                {item.submenu.length > 0 && openSubmenu === item.label && (
+                {item.children && item.children.length > 0 && openSubmenu === item.label && (
                   <div className="pl-4 py-2 flex flex-col gap-1">
-                    {item.submenu.map((sub) => (
+                    {item.children.map((sub) => (
                       <a
                         key={sub.href}
                         href={sub.href}
@@ -162,7 +119,7 @@ export function Header() {
               </div>
             ))}
             <a
-              href="/admissions/apply"
+              href="/admission/apply"
               className="mt-2 px-5 py-3 bg-[#800000] text-white text-sm font-medium rounded-full text-center"
               onClick={() => setMobileOpen(false)}
             >
