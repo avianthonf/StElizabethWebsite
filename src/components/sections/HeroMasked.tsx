@@ -27,7 +27,9 @@ export function HeroMasked({ heroImage = '/images/videocover2-812-optimized.webp
   const overlayRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLHeadingElement>(null);
 
-  useClipMask({ containerRef, imageRef, overlayRef, textRef });
+  const imageGroupRef = useRef<SVGGElement>(null);
+
+  useClipMask({ containerRef, imageRef, overlayRef, textRef, imageGroupRef });
 
   return (
     <section
@@ -61,8 +63,8 @@ export function HeroMasked({ heroImage = '/images/videocover2-812-optimized.webp
             <clipPath id="weBelieveClip" clipPathUnits="userSpaceOnUse">
               {/* Group that will be scaled — start at scale(0.15) */}
               <g
-                ref={imageRef as React.RefObject<SVGGElement>}
-                style={{ transformOrigin: 'center', transform: 'scale(0.15)' }}
+                ref={imageGroupRef}
+                style={{ transformOrigin: 'center center', transform: 'scale(0.15)' }}
               >
                 <image
                   href={heroImage}
