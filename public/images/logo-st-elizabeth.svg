@@ -1,0 +1,17 @@
+<svg width="200" height="60" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shield background -->
+  <path d="M30 5 L45 10 L45 25 C45 35 37.5 45 30 50 C22.5 45 15 35 15 25 L15 10 Z" fill="#6C1F35" stroke="#6C1F35" stroke-width="1"/>
+
+  <!-- Cross symbol -->
+  <rect x="28" y="15" width="4" height="20" fill="white"/>
+  <rect x="20" y="23" width="20" height="4" fill="white"/>
+
+  <!-- Text: ST. ELIZABETH -->
+  <text x="55" y="25" font-family="Playfair Display, serif" font-size="16" font-weight="700" fill="#6C1F35" letter-spacing="-0.02em">ST. ELIZABETH</text>
+
+  <!-- Text: HIGH SCHOOL -->
+  <text x="55" y="40" font-family="Montserrat, sans-serif" font-size="8" font-weight="700" fill="#333333" letter-spacing="0.15em">HIGH SCHOOL</text>
+
+  <!-- Location text -->
+  <text x="55" y="50" font-family="Montserrat, sans-serif" font-size="6" font-weight="400" fill="#666666" letter-spacing="0.1em">POMBURPA, GOA</text>
+</svg>
