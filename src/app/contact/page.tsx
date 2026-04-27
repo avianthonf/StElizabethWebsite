@@ -1,10 +1,14 @@
 'use client';
 
+// TODO: Replace FORMSPREE_ENDPOINT with actual URL from Formspree dashboard
+// See user_setup in 03-02-PLAN.md for instructions
+
 import type { Metadata } from 'next';
 import { useState, useRef, FormEvent } from 'react';
 import { ContentPage, PageHero } from '@/components/templates/ContentPage';
 import { MapPin, Phone, Mail, Clock } from 'lucide-react';
 import { validateContactForm, isHoneypotFilled, type ContactFormData, type FormErrors } from '@/lib/form-validation';
+import { GdprConsent } from '@/components/ui/GdprConsent';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState<ContactFormData>({
@@ -18,6 +22,9 @@ export default function ContactPage() {
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [gdprConsent, setGdprConsent] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [submitMessage, setSubmitMessage] = useState('');
   const firstNameRef = useRef<HTMLInputElement>(null);
   const lastNameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
@@ -48,6 +55,12 @@ export default function ContactPage() {
 
     // Validate
     const validationErrors = validateContactForm(formData);
+
+    // Check GDPR consent
+    if (!gdprConsent) {
+      validationErrors.gdprConsent = 'You must consent to data processing to submit this form';
+    }
+
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       // Focus first error field
@@ -62,9 +75,54 @@ export default function ContactPage() {
     }
 
     setIsSubmitting(true);
-    // Submission logic will be added in Plan 03-02
-    console.log('Form valid, ready for submission:', formData);
-    setIsSubmitting(false);
+    setSubmitStatus('idle');
+    setSubmitMessage('');
+
+    try {
+      // Submit to Formspree
+      // PLACEHOLDER: Replace with actual Formspree endpoint URL after user setup
+      const FORMSPREE_ENDPOINT = 'https://formspree.io/f/YOUR_FORM_ID_HERE';
+
+      const response = await fetch(FORMSPREE_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          subject: formData.subject,
+          message: formData.message,
+          _subject: `Contact Form: ${formData.subject}`, // Formspree email subject
+        }),
+      });
+
+      if (response.ok) {
+        setSubmitStatus('success');
+        setSubmitMessage('Thank you for contacting us! We will respond within 1-2 business days.');
+        // Reset form
+        setFormData({
+          firstName: '',
+          lastName: '',
+          email: '',
+          phone: '',
+          subject: '',
+          message: '',
+          website: '',
+        });
+        setGdprConsent(false);
+      } else {
+        throw new Error('Form submission failed');
+      }
+    } catch (error) {
+      console.error('Form submission error:', error);
+      setSubmitStatus('error');
+      setSubmitMessage('Sorry, there was an error submitting your form. Please try again or email us directly at info@stelizabeth.edu.in.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
@@ -454,6 +512,13 @@ export default function ContactPage() {
                 )}
               </div>
 
+              <GdprConsent
+                checked={gdprConsent}
+                onChange={setGdprConsent}
+                error={errors.gdprConsent}
+                id="contact-gdpr-consent"
+              />
+
               <button
                 type="submit"
                 disabled={isSubmitting}
@@ -461,7 +526,7 @@ export default function ContactPage() {
                   padding: '14px 32px',
                   fontSize: 15,
                   fontWeight: 600,
-                  backgroundColor: isSubmitting ? '#999' : 'var(--color-primary-maroon)',
+                  backgroundColor: isSubmitting ? '#ccc' : 'var(--color-primary-maroon)',
                   color: 'var(--color-white)',
                   border: 'none',
                   borderRadius: 4,
@@ -469,8 +534,44 @@ export default function ContactPage() {
                   transition: 'background-color 0.2s',
                 }}
               >
-                {isSubmitting ? 'Validating...' : 'Send Message'}
+                {isSubmitting ? 'Sending...' : 'Send Message'}
               </button>
+
+              {submitStatus === 'success' && (
+                <div
+                  style={{
+                    marginTop: 24,
+                    padding: 16,
+                    backgroundColor: 'var(--color-bg-light)',
+                    borderLeft: '4px solid var(--color-primary-maroon)',
+                    borderRadius: 4,
+                  }}
+                  role="status"
+                  aria-live="polite"
+                >
+                  <p style={{ fontSize: 15, color: 'var(--color-text-dark)', margin: 0 }}>
+                    {submitMessage}
+                  </p>
+                </div>
+              )}
+
+              {submitStatus === 'error' && (
+                <div
+                  style={{
+                    marginTop: 24,
+                    padding: 16,
+                    backgroundColor: '#fff5f5',
+                    borderLeft: '4px solid var(--color-primary-maroon)',
+                    borderRadius: 4,
+                  }}
+                  role="alert"
+                  aria-live="assertive"
+                >
+                  <p style={{ fontSize: 15, color: 'var(--color-primary-maroon)', margin: 0 }}>
+                    {submitMessage}
+                  </p>
+                </div>
+              )}
             </form>
           </div>
         </div>
