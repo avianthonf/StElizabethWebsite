@@ -5,8 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "prebuild": "npm run optimize:images",
     "start": "next start",
     "lint": "eslint",
+    "optimize:images": "node scripts/optimize-images.js",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
@@ -42,6 +44,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "jsdom": "^25.0.1",
+    "sharp": "^0.33.5",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.5"
