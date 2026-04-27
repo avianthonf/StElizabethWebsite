@@ -7,7 +7,7 @@
   --color-brand-gold-light: #F3E5AB;
   --color-brand-navy: #002147;
   --color-brand-sand: #F5F5DC;
-  
+
   --font-display: var(--font-playfair);
   --font-sans: var(--font-inter);
 }
@@ -31,4 +31,175 @@ body {
 
 .font-sans {
   font-family: var(--font-sans), sans-serif;
+}
+
+/* Walker School CSS Pattern Classes */
+
+/* Layout & Container */
+.site-container {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.site-main {
+  position: relative;
+}
+
+.site-main-wrapper {
+  width: 100%;
+}
+
+/* Background Colors */
+.site-bg-primary {
+  background-color: #800000;
+}
+
+.site-bg-primary-wrapper {
+  background-color: #800000;
+}
+
+.site-bg-light {
+  background-color: #F5F5F5;
+}
+
+.site-bg-light-wrapper {
+  background-color: #F5F5F5;
+}
+
+.site-color-white {
+  color: #ffffff;
+}
+
+/* Custom Component Wrappers */
+.site-custom-intro-banner-wrapper {
+  background-color: #F5F5DC;
+}
+
+.site-custom-video-banner {
+  position: relative;
+  overflow: hidden;
+}
+
+.site-custom-red-header-wrapper {
+  background-color: #ffffff;
+}
+
+.site-custom-cutout-image-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.site-custom-grid-reverse-wrapper {
+  background-color: #ffffff;
+}
+
+.site-custom-slide-gallery-wrapper {
+  background-color: #F5F5F5;
+}
+
+.site-custom-number-gallery-wrapper {
+  background-color: #ffffff;
+}
+
+.site-custom-image-grid-wrapper {
+  background-color: #ffffff;
+}
+
+/* Slider & Carousel */
+.site-slider-slideshow-wrapper {
+  position: relative;
+}
+
+.site-multi-slide-slider-wrapper {
+  position: relative;
+}
+
+.site-slide-height-dt-cover-wrapper {
+  height: 600px;
+}
+
+@media (max-width: 768px) {
+  .site-slide-height-dt-cover-wrapper {
+    height: 400px;
+  }
+}
+
+.site-slide-caption-dt-mc-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.site-custom-banner-size-150-wrapper {
+  min-height: 750px;
+}
+
+@media (max-width: 768px) {
+  .site-custom-banner-size-150-wrapper {
+    min-height: 600px;
+  }
+}
+
+/* Tab Slider */
+.site-slider-tab-wrapper {
+  position: relative;
+}
+
+.site-slider-tab-dt-left-wrapper {
+  position: relative;
+}
+
+/* Desktop/Mobile Utilities */
+.site-desktop-width-50-wrapper {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .site-desktop-width-50-wrapper {
+    width: 50%;
+  }
+}
+
+.site-mobile-hide-wrapper {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .site-mobile-hide-wrapper {
+    display: block;
+  }
+}
+
+/* Spacing Utilities */
+.site-padding-dt-left-30-wrapper {
+  padding-left: 0;
+}
+
+@media (min-width: 768px) {
+  .site-padding-dt-left-30-wrapper {
+    padding-left: 30px;
+  }
+}
+
+.site-padding-mob-left-20-wrapper {
+  padding-left: 20px;
+}
+
+@media (min-width: 768px) {
+  .site-padding-mob-left-20-wrapper {
+    padding-left: 0;
+  }
+}
+
+.site-padding-mob-right-20-wrapper {
+  padding-right: 20px;
+}
+
+@media (min-width: 768px) {
+  .site-padding-mob-right-20-wrapper {
+    padding-right: 0;
+  }
 }
