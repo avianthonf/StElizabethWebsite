@@ -43,59 +43,42 @@ export function useHorizontalScroll({
       return;
     }
 
-    const ctx = gsap.context(() => {
-      // Calculate how far the track should travel
-      // Cards start off-screen right, end off-screen left
+    const createScrollAnimation = () => {
       const totalWidth = trackRef.current!.scrollWidth;
       const viewportWidth = window.innerWidth;
       const travelDistance = totalWidth - viewportWidth;
 
-      gsap.to(trackRef.current, {
-        x: -travelDistance,
-        ease: 'none', // Linear mapping of scroll to x — no easing, pure scroll-linked
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: 'top top',
-          end: '+=300%', // Scroll 3x viewport height for full travel
-          scrub: 1, // 1-second lag for buttery smooth Walker feel
-          pin: true, // Pin the sticky inner while scrolling
-          anticipatePin: 1, // Prevent jump on pin
-        },
+      return gsap.context(() => {
+        gsap.to(trackRef.current, {
+          x: -travelDistance,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: 'top top',
+            end: '+=300%',
+            scrub: 1.5,
+            pin: true,
+            anticipatePin: 1,
+          },
+        });
       });
-    });
+    };
 
-    // Recalculate travel distance on window resize
+    let animationContext = createScrollAnimation();
+
     const handleResize = debounce(() => {
       if (!containerRef.current || !trackRef.current) return;
 
-      const totalWidth = trackRef.current.scrollWidth;
-      const viewportWidth = window.innerWidth;
-      const travelDistance = totalWidth - viewportWidth;
-
-      // Update the animation with new travel distance
-      gsap.to(trackRef.current, {
-        x: -travelDistance,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: 'top top',
-          end: '+=300%',
-          scrub: 1,
-          pin: true,
-          anticipatePin: 1,
-        },
-      });
-
-      // Refresh ScrollTrigger to recalculate positions
+      animationContext.revert();
+      animationContext = createScrollAnimation();
       ScrollTrigger.refresh();
     }, 150);
 
     window.addEventListener('resize', handleResize);
 
-    // Cleanup: remove resize listener
     return () => {
       window.removeEventListener('resize', handleResize);
-      ctx.revert();
+      animationContext.revert();
     };
   }, [containerRef, trackRef]);
 }
