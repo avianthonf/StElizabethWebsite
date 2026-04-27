@@ -1,9 +1,13 @@
 'use client';
 
+// TODO: Replace FORMSPREE_ENDPOINT with actual URL from Formspree dashboard
+// See user_setup in 03-02-PLAN.md for instructions
+
 import type { Metadata } from 'next';
 import { useState, useRef, FormEvent } from 'react';
 import { ContentPage, PageHero } from '@/components/templates/ContentPage';
 import { validateAdmissionsForm, isHoneypotFilled, type AdmissionsFormData, type FormErrors } from '@/lib/form-validation';
+import { GdprConsent } from '@/components/ui/GdprConsent';
 
 export default function AdmissionsPage() {
   const [formData, setFormData] = useState<AdmissionsFormData>({
@@ -16,6 +20,9 @@ export default function AdmissionsPage() {
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [gdprConsent, setGdprConsent] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [submitMessage, setSubmitMessage] = useState('');
   const parentNameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
@@ -42,6 +49,11 @@ export default function AdmissionsPage() {
     }
 
     const validationErrors = validateAdmissionsForm(formData);
+
+    if (!gdprConsent) {
+      validationErrors.gdprConsent = 'You must consent to data processing to submit this form';
+    }
+
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       // Focus first error field
@@ -55,8 +67,51 @@ export default function AdmissionsPage() {
     }
 
     setIsSubmitting(true);
-    console.log('Form valid, ready for submission:', formData);
-    setIsSubmitting(false);
+    setSubmitStatus('idle');
+    setSubmitMessage('');
+
+    try {
+      // PLACEHOLDER: Replace with actual Formspree endpoint URL after user setup
+      const FORMSPREE_ENDPOINT = 'https://formspree.io/f/YOUR_FORM_ID_HERE';
+
+      const response = await fetch(FORMSPREE_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          parentName: formData.parentName,
+          email: formData.email,
+          phone: formData.phone,
+          studentGrade: formData.studentGrade,
+          message: formData.message,
+          _subject: `Admissions Inquiry: Grade ${formData.studentGrade}`, // Formspree email subject
+        }),
+      });
+
+      if (response.ok) {
+        setSubmitStatus('success');
+        setSubmitMessage('Thank you for your interest in St. Elizabeth High School! Our admissions team will contact you within 2-3 business days to schedule a campus visit.');
+        // Reset form
+        setFormData({
+          parentName: '',
+          email: '',
+          phone: '',
+          studentGrade: '',
+          message: '',
+          website: '',
+        });
+        setGdprConsent(false);
+      } else {
+        throw new Error('Form submission failed');
+      }
+    } catch (error) {
+      console.error('Form submission error:', error);
+      setSubmitStatus('error');
+      setSubmitMessage('Sorry, there was an error submitting your inquiry. Please try again or email us directly at admissions@stelizabeth.edu.in.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
@@ -391,6 +446,13 @@ export default function AdmissionsPage() {
                 />
               </div>
 
+              <GdprConsent
+                checked={gdprConsent}
+                onChange={setGdprConsent}
+                error={errors.gdprConsent}
+                id="admissions-gdpr-consent"
+              />
+
               <button
                 type="submit"
                 disabled={isSubmitting}
@@ -398,7 +460,7 @@ export default function AdmissionsPage() {
                   padding: '14px 32px',
                   fontSize: 15,
                   fontWeight: 600,
-                  backgroundColor: isSubmitting ? '#999' : 'var(--color-primary-maroon)',
+                  backgroundColor: isSubmitting ? '#ccc' : 'var(--color-primary-maroon)',
                   color: 'var(--color-white)',
                   border: 'none',
                   borderRadius: 4,
@@ -406,8 +468,44 @@ export default function AdmissionsPage() {
                   transition: 'background-color 0.2s',
                 }}
               >
-                {isSubmitting ? 'Validating...' : 'Submit Inquiry'}
+                {isSubmitting ? 'Submitting...' : 'Submit Inquiry'}
               </button>
+
+              {submitStatus === 'success' && (
+                <div
+                  style={{
+                    marginTop: 24,
+                    padding: 16,
+                    backgroundColor: 'var(--color-bg-light)',
+                    borderLeft: '4px solid var(--color-primary-maroon)',
+                    borderRadius: 4,
+                  }}
+                  role="status"
+                  aria-live="polite"
+                >
+                  <p style={{ fontSize: 15, color: 'var(--color-text-dark)', margin: 0 }}>
+                    {submitMessage}
+                  </p>
+                </div>
+              )}
+
+              {submitStatus === 'error' && (
+                <div
+                  style={{
+                    marginTop: 24,
+                    padding: 16,
+                    backgroundColor: '#fff5f5',
+                    borderLeft: '4px solid var(--color-primary-maroon)',
+                    borderRadius: 4,
+                  }}
+                  role="alert"
+                  aria-live="assertive"
+                >
+                  <p style={{ fontSize: 15, color: 'var(--color-primary-maroon)', margin: 0 }}>
+                    {submitMessage}
+                  </p>
+                </div>
+              )}
             </form>
           </div>
         </div>
