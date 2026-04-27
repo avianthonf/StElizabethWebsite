@@ -18,7 +18,11 @@ export default function ContactPage() {
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const firstErrorRef = useRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(null);
+  const firstNameRef = useRef<HTMLInputElement>(null);
+  const lastNameRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const subjectRef = useRef<HTMLSelectElement>(null);
+  const messageRef = useRef<HTMLTextAreaElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -47,7 +51,13 @@ export default function ContactPage() {
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       // Focus first error field
-      setTimeout(() => firstErrorRef.current?.focus(), 100);
+      setTimeout(() => {
+        if (validationErrors.firstName) firstNameRef.current?.focus();
+        else if (validationErrors.lastName) lastNameRef.current?.focus();
+        else if (validationErrors.email) emailRef.current?.focus();
+        else if (validationErrors.subject) subjectRef.current?.focus();
+        else if (validationErrors.message) messageRef.current?.focus();
+      }, 100);
       return;
     }
 
@@ -232,7 +242,7 @@ export default function ContactPage() {
                     aria-required="true"
                     aria-invalid={!!errors.firstName}
                     aria-describedby={errors.firstName ? 'firstName-error' : undefined}
-                    ref={errors.firstName ? firstErrorRef : undefined}
+                    ref={firstNameRef}
                     style={{
                       width: '100%',
                       padding: '12px 16px',
@@ -271,7 +281,7 @@ export default function ContactPage() {
                     aria-required="true"
                     aria-invalid={!!errors.lastName}
                     aria-describedby={errors.lastName ? 'lastName-error' : undefined}
-                    ref={errors.lastName && !errors.firstName ? firstErrorRef : undefined}
+                    ref={lastNameRef}
                     style={{
                       width: '100%',
                       padding: '12px 16px',
@@ -311,7 +321,7 @@ export default function ContactPage() {
                   aria-required="true"
                   aria-invalid={!!errors.email}
                   aria-describedby={errors.email ? 'email-error' : undefined}
-                  ref={errors.email && !errors.firstName && !errors.lastName ? firstErrorRef : undefined}
+                  ref={emailRef}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -379,7 +389,7 @@ export default function ContactPage() {
                   aria-required="true"
                   aria-invalid={!!errors.subject}
                   aria-describedby={errors.subject ? 'subject-error' : undefined}
-                  ref={errors.subject && !errors.firstName && !errors.lastName && !errors.email ? firstErrorRef : undefined}
+                  ref={subjectRef}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -426,7 +436,7 @@ export default function ContactPage() {
                   aria-required="true"
                   aria-invalid={!!errors.message}
                   aria-describedby={errors.message ? 'message-error' : undefined}
-                  ref={errors.message && !errors.firstName && !errors.lastName && !errors.email && !errors.subject ? firstErrorRef : undefined}
+                  ref={messageRef}
                   style={{
                     width: '100%',
                     padding: '12px 16px',

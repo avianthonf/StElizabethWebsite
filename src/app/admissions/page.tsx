@@ -16,7 +16,10 @@ export default function AdmissionsPage() {
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const firstErrorRef = useRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(null);
+  const parentNameRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
+  const studentGradeRef = useRef<HTMLSelectElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -41,7 +44,13 @@ export default function AdmissionsPage() {
     const validationErrors = validateAdmissionsForm(formData);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      setTimeout(() => firstErrorRef.current?.focus(), 100);
+      // Focus first error field
+      setTimeout(() => {
+        if (validationErrors.parentName) parentNameRef.current?.focus();
+        else if (validationErrors.email) emailRef.current?.focus();
+        else if (validationErrors.phone) phoneRef.current?.focus();
+        else if (validationErrors.studentGrade) studentGradeRef.current?.focus();
+      }, 100);
       return;
     }
 
@@ -211,7 +220,7 @@ export default function AdmissionsPage() {
                   aria-required="true"
                   aria-invalid={!!errors.parentName}
                   aria-describedby={errors.parentName ? 'parentName-error' : undefined}
-                  ref={errors.parentName ? firstErrorRef : undefined}
+                  ref={parentNameRef}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -250,7 +259,7 @@ export default function AdmissionsPage() {
                   aria-required="true"
                   aria-invalid={!!errors.email}
                   aria-describedby={errors.email ? 'email-error' : undefined}
-                  ref={errors.email && !errors.parentName ? firstErrorRef : undefined}
+                  ref={emailRef}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -289,7 +298,7 @@ export default function AdmissionsPage() {
                   aria-required="true"
                   aria-invalid={!!errors.phone}
                   aria-describedby={errors.phone ? 'phone-error' : undefined}
-                  ref={errors.phone && !errors.parentName && !errors.email ? firstErrorRef : undefined}
+                  ref={phoneRef}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -327,7 +336,7 @@ export default function AdmissionsPage() {
                   aria-required="true"
                   aria-invalid={!!errors.studentGrade}
                   aria-describedby={errors.studentGrade ? 'studentGrade-error' : undefined}
-                  ref={errors.studentGrade && !errors.parentName && !errors.email && !errors.phone ? firstErrorRef : undefined}
+                  ref={studentGradeRef}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
