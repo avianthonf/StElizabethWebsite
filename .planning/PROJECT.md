@@ -2,75 +2,72 @@
 
 ## What This Is
 
-A pixel-perfect Walker School-inspired website for St. Elizabeth High School, Pomburpa (Goa, India). The site replicates the Walker School's scroll-driven animations, sticky multi-level mega-menu, horizontal scroll-jacking carousels, SVG text-mask heroes, and split sticky sections — adapted for St. Elizabeth branding and content. Built as a Next.js 14 static site with GSAP ScrollTrigger and SOP-001 design tokens.
+A static marketing website for St. Elizabeth High School, Pomburpa, rebuilt in Next.js to closely match the visual design, layout language, and interaction quality of The Walker School website. It is intended to function as a pixel-accurate reference implementation of that experience while replacing Walker branding, content, and assets with St. Elizabeth-specific material.
 
 ## Core Value
 
-A visually impressive, Walker School-quality marketing site that demonstrates St. Elizabeth High School's identity — faith, excellence, service — with buttery-smooth scroll animations and professional design without requiring a full design team.
+Deliver a Walker School-quality website experience for St. Elizabeth that feels visually identical in craft and polish while remaining a static, build-safe Next.js site.
 
 ## Requirements
 
 ### Validated
 
-- ✓ Next.js 14 static export scaffold — existing
-- ✓ Tailwind CSS v4 + SOP-001 design tokens — existing
-- ✓ GSAP 3.x + ScrollTrigger integration — existing
-- ✓ WalkHeader ghost nav with mega-menu — existing
-- ✓ HeroMasked "WE BELIEVE" SVG clip-path hero — existing
-- ✓ ValueCarousel horizontal scroll-jacking carousel — existing
-- ✓ StickySplitSection with parallax right column — existing
-- ✓ DivisionsTabs synchronized tab slider — existing
-- ✓ FooterCtaSection with aerial video background — existing
+- ✓ Static-export Next.js marketing site with App Router architecture — existing
+- ✓ Tailwind-based design token system and Walker-inspired visual language — existing
+- ✓ Scroll-driven animation foundation using GSAP, Framer Motion, and Lenis — existing
+- ✓ Multi-page school-site structure with homepage and interior routes — existing
 
 ### Active
 
-- [ ] Replace Walker School copy/branding with St. Elizabeth content
-- [ ] Add contact/inquiry form (admissions)
-- [ ] Add interior page templates (About, Admissions, Academics)
-- [ ] Add GSAP resize handler for horizontal scroll carousel
-- [ ] Add mobile scroll-lock fix for iOS Safari
-- [ ] Add image lazy loading with Next.js Image
-- [ ] Add accessibility audit (WCAG 2.1)
-- [ ] Write unit tests for GSAP hooks and utilities
-- [ ] Write E2E tests for critical user flows
-- [ ] Update README with St. Elizabeth setup instructions
+- [ ] Reproduce The Walker School homepage and key interior-page visual patterns with pixel-level fidelity
+- [ ] Replace Walker branding, copy, imagery, and school-specific content with St. Elizabeth equivalents without losing the source design quality
+- [ ] Ensure all replicated patterns work within static export constraints and pass production build
+- [ ] Preserve smooth scrolling, sticky navigation, scroll choreography, and responsive behavior across major breakpoints
 
 ### Out of Scope
 
-- GSAP commercial license migration — defer unless required
-- Headless CMS integration — defer to v2
-- Internationalization (Konkani/Hindi) — defer to v2
-- React 19 upgrade until stable — defer
-- Backend / database — static site only
+- Building a custom backend or CMS — the project is constrained to static export
+- Adding non-reference features not present in the Walker-inspired target experience — clone fidelity is the priority
+- Reinterpreting the design into a different visual direction — this work is explicitly reference-led, not a fresh redesign
 
 ## Context
 
-**Reference site:** The Walker School (thewalkerschool.org) — ASP.NET rebuilt to React. Design system uses SOP-001 with `#6C1F35` burgundy/maroon, fluid `clamp()` typography (Montserrat 900wt headings), GSAP `scrub: 1` physics, SVG text-mask clip-paths, 45:55 sticky split layouts, and horizontal scroll-jacking pinned sections.
+The existing codebase is already a brownfield Next.js 16 static-export site with multiple Walker-inspired components, design tokens, and animation hooks. The current direction is not a generic school-site rebuild; it is a highly specific fidelity project where success is measured by how closely the St. Elizabeth site matches https://www.thewalkerschool.org/ in layout, motion, hierarchy, and perceived polish.
 
-**Current state:** Full Walker-inspired homepage shell implemented with GSAP-powered components. Content and branding still use Walker School copy and placeholder images. `CLAUDE.md` and `.planning/codebase/` mapping completed.
-
-**Reference docs:**
-- `.planning/codebase/STACK.md` — tech stack and dependencies
-- `.planning/codebase/ARCHITECTURE.md` — component architecture and data flow
-- `.planning/codebase/CONCERNS.md` — known tech debt and issues
+The site already includes GSAP-driven interactions, reusable section components, and a codebase map under `.planning/codebase/`. That means initialization should treat the current implementation as a partial foundation to audit, align, and extend rather than a brand-new greenfield app.
 
 ## Constraints
 
-- **Tech stack**: Next.js 14 (App Router, static export) + Tailwind CSS v4 + GSAP 3.x + Framer Motion 11 — already chosen
-- **Design fidelity**: Walker School visual patterns as template, St. Elizabeth branding layer on top
-- **No backend**: Static site only — contact form can use third-party embed or Netlify Forms
-- **Build target**: `npm run build` must succeed, static export to `out/`
+- **Tech stack**: Next.js static export, TypeScript, Tailwind CSS, GSAP, Framer Motion — already established in the codebase
+- **Build target**: `npm run build` must succeed and export a fully static site
+- **Reference fidelity**: The Walker School site is the design benchmark for layout, interactions, and motion quality
+- **Brand adaptation**: Walker structure and interaction patterns must be translated to St. Elizabeth branding and content
+- **No backend**: Forms or dynamic behavior must remain compatible with static hosting
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
-|---------|-----------|---------|
-| GSAP + Framer Motion hybrid | GSAP for scroll-linked physics (scrub, pinning), Framer Motion for discrete UI transitions (accordion, tabs, mobile overlay) | ✓ Good |
-| Exclude Lenis smooth scroll | Avoids double-smoothing conflict with GSAP ScrollTrigger scrub | ✓ Good |
-| SVG text clip-path for hero mask | Text shape acts as clipPath revealing background on scroll | ✓ Good |
-| `scrub: 1` lag | 1-second lag creates buttery weighty feel | ✓ Good |
-| SOP-001 CSS design tokens | Single source of truth for colors, fonts, easing | ✓ Good |
-| TypeScript with `'use client'` isolation | GSAP animations require client; SSR for initial DOM (SEO) | ✓ Good |
+|----------|-----------|---------|
+| Use The Walker School website as the primary visual and interaction reference | The goal is not broad inspiration but clone-level fidelity | — Pending |
+| Keep the site static-export compatible | The project already targets static hosting and avoids backend complexity | — Pending |
+| Treat existing implementation as a partial baseline rather than restart from scratch | The codebase already contains Walker-inspired patterns worth auditing and reusing | — Pending |
+
+## Evolution
+
+This document evolves at phase transitions and milestone boundaries.
+
+**After each phase transition** (via `/gsd-transition`):
+1. Requirements invalidated? → Move to Out of Scope with reason
+2. Requirements validated? → Move to Validated with phase reference
+3. New requirements emerged? → Add to Active
+4. Decisions to log? → Add to Key Decisions
+5. "What This Is" still accurate? → Update if drifted
+
+**After each milestone** (via `/gsd-complete-milestone`):
+1. Full review of all sections
+2. Core Value check — still the right priority?
+3. Audit Out of Scope — reasons still valid?
+4. Update Context with current state
 
 ---
-*Last updated: 2026-04-27 after project initialization*
+*Last updated: 2026-04-28 after initialization*
