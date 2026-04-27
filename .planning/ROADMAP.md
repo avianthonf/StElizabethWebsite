@@ -35,7 +35,7 @@ Plans:
 - [x] 01-01-PLAN.md — Fix GSAP bugs (resize handler + plugin registration) + add Vitest unit tests
 - [x] 01-02-PLAN.md — Fix iOS Safari scroll lock + add Playwright E2E tests for mobile menu
 - [x] 01-03-PLAN.md — Expand E2E test coverage (navigation, scroll animations, accessibility with axe-core)
-- [ ] 01-04-PLAN.md — Image optimization pipeline + font preload (sharp, next/font/google)
+- [x] 01-04-PLAN.md — Image optimization pipeline + font preload (sharp, next/font/google)
 
 ---
 
@@ -54,7 +54,13 @@ Plans:
 4. User sees St. Elizabeth school photos (or appropriate stock images) instead of Walker School placeholders
 5. Developer can reuse ContentPage, ListingPage, and DetailPage templates to create new pages quickly
 
-**Plans:** TBD
+**Plans:** 4 plans in 3 waves
+
+Plans:
+- [ ] 02-01-PLAN.md — Branding core (logo, favicon, nav structure)
+- [ ] 02-02-PLAN.md — Content copy replacement (mission, values, images)
+- [ ] 02-03-PLAN.md — Page template system + About Us page
+- [ ] 02-04-PLAN.md — Remaining interior pages (Academics, Admissions, Athletics, Arts, Contact)
 
 **UI hint:** yes
 
@@ -104,12 +110,12 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Bug Fixes | 0/4 | Ready to execute | - |
-| 2. Content & Interior Pages | 0/0 | Not started | - |
+| 1. Foundation & Bug Fixes | 4/4 | Complete | 2026-04-27 |
+| 2. Content & Interior Pages | 0/4 | Ready to execute | - |
 | 3. Forms & Conversion | 0/0 | Not started | - |
 | 4. SEO, Performance & Launch | 0/0 | Not started | - |
 
 ---
 
 *Roadmap created: 2026-04-27*
-*Last updated: 2026-04-27T12:53:16.357Z*
+*Last updated: 2026-04-27T15:12:07.781Z*
