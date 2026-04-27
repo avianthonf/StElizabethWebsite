@@ -3,6 +3,18 @@
 import { useEffect, useRef } from 'react';
 import { gsap, ScrollTrigger } from '@/lib/gsap-config';
 
+// Debounce utility for resize handler
+function debounce<T extends (...args: any[]) => void>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout | null = null;
+  return (...args: Parameters<T>) => {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+}
+
 /**
  * Walker "WE VALUE" horizontal scroll carousel.
  *
@@ -52,6 +64,38 @@ export function useHorizontalScroll({
       });
     });
 
-    return () => ctx.revert();
+    // Recalculate travel distance on window resize
+    const handleResize = debounce(() => {
+      if (!containerRef.current || !trackRef.current) return;
+
+      const totalWidth = trackRef.current.scrollWidth;
+      const viewportWidth = window.innerWidth;
+      const travelDistance = totalWidth - viewportWidth;
+
+      // Update the animation with new travel distance
+      gsap.to(trackRef.current, {
+        x: -travelDistance,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: 'top top',
+          end: '+=300%',
+          scrub: 1,
+          pin: true,
+          anticipatePin: 1,
+        },
+      });
+
+      // Refresh ScrollTrigger to recalculate positions
+      ScrollTrigger.refresh();
+    }, 150);
+
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup: remove resize listener
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      ctx.revert();
+    };
   }, [containerRef, trackRef]);
 }
