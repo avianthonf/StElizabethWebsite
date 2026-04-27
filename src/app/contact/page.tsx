@@ -307,7 +307,7 @@ export default function ContactPage() {
                       width: '100%',
                       padding: '12px 16px',
                       fontSize: 15,
-                      border: `1px solid ${errors.firstName ? 'var(--color-primary-maroon)' : '#ddd'}`,
+                      border: `1px solid ${errors.firstName ? 'var(--color-primary-maroon)' : 'var(--color-border-light)'}`,
                       borderRadius: 4,
                       backgroundColor: 'var(--color-white)',
                     }}
@@ -346,7 +346,7 @@ export default function ContactPage() {
                       width: '100%',
                       padding: '12px 16px',
                       fontSize: 15,
-                      border: `1px solid ${errors.lastName ? 'var(--color-primary-maroon)' : '#ddd'}`,
+                      border: `1px solid ${errors.lastName ? 'var(--color-primary-maroon)' : 'var(--color-border-light)'}`,
                       borderRadius: 4,
                       backgroundColor: 'var(--color-white)',
                     }}
@@ -386,7 +386,7 @@ export default function ContactPage() {
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: 15,
-                    border: `1px solid ${errors.email ? 'var(--color-primary-maroon)' : '#ddd'}`,
+                    border: `1px solid ${errors.email ? 'var(--color-primary-maroon)' : 'var(--color-border-light)'}`,
                     borderRadius: 4,
                     backgroundColor: 'var(--color-white)',
                   }}
@@ -421,7 +421,7 @@ export default function ContactPage() {
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: 15,
-                    border: '1px solid #ddd',
+                    border: '1px solid var(--color-border-light)',
                     borderRadius: 4,
                     backgroundColor: 'var(--color-white)',
                   }}
@@ -454,7 +454,7 @@ export default function ContactPage() {
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: 15,
-                    border: `1px solid ${errors.subject ? 'var(--color-primary-maroon)' : '#ddd'}`,
+                    border: `1px solid ${errors.subject ? 'var(--color-primary-maroon)' : 'var(--color-border-light)'}`,
                     borderRadius: 4,
                     backgroundColor: 'var(--color-white)',
                   }}
@@ -501,7 +501,7 @@ export default function ContactPage() {
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: 15,
-                    border: `1px solid ${errors.message ? 'var(--color-primary-maroon)' : '#ddd'}`,
+                    border: `1px solid ${errors.message ? 'var(--color-primary-maroon)' : 'var(--color-border-light)'}`,
                     borderRadius: 4,
                     backgroundColor: 'var(--color-white)',
                     fontFamily: 'inherit',
@@ -528,7 +528,7 @@ export default function ContactPage() {
                   padding: '14px 32px',
                   fontSize: 15,
                   fontWeight: 600,
-                  backgroundColor: isSubmitting ? '#ccc' : 'var(--color-primary-maroon)',
+                  backgroundColor: isSubmitting ? 'var(--color-gray-light)' : 'var(--color-primary-maroon)',
                   color: 'var(--color-white)',
                   border: 'none',
                   borderRadius: 4,
@@ -562,7 +562,7 @@ export default function ContactPage() {
                   style={{
                     marginTop: 24,
                     padding: 16,
-                    backgroundColor: '#fff5f5',
+                    backgroundColor: 'var(--color-offwhite)',
                     borderLeft: '4px solid var(--color-primary-maroon)',
                     borderRadius: 4,
                   }}
@@ -595,12 +595,12 @@ export default function ContactPage() {
         <div
           style={{
             minHeight: 400,
-            backgroundColor: '#f5f5f5',
+            backgroundColor: 'var(--color-gray-light)',
             borderRadius: 8,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            border: '2px dashed #ddd',
+            border: '2px dashed var(--color-border-light)',
           }}
         >
           <div style={{ textAlign: 'center', padding: 40 }}>
@@ -608,13 +608,13 @@ export default function ContactPage() {
             <p
               style={{
                 fontSize: 16,
-                color: '#666',
+                color: 'var(--color-gray)',
                 marginBottom: 8,
               }}
             >
               Google Maps embed coming in Phase 3
             </p>
-            <p style={{ fontSize: 14, color: '#999' }}>
+            <p style={{ fontSize: 14, color: 'var(--color-gray)' }}>
               Interactive map showing St. Elizabeth High School location in Pomburpa, Goa
             </p>
           </div>

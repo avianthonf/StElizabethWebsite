@@ -132,7 +132,7 @@ export default function ArtsPage() {
                 justifyContent: 'center',
               }}
             >
-              <p style={{ fontSize: 14, color: '#999' }}>
+              <p style={{ fontSize: 14, color: 'var(--color-gray)' }}>
                 [Student artwork photo]
               </p>
             </div>

@@ -282,7 +282,7 @@ export default function AdmissionsPage() {
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: 15,
-                    border: `1px solid ${errors.parentName ? 'var(--color-primary-maroon)' : '#ddd'}`,
+                    border: `1px solid ${errors.parentName ? 'var(--color-primary-maroon)' : 'var(--color-border-light)'}`,
                     borderRadius: 4,
                     backgroundColor: 'var(--color-white)',
                   }}
@@ -321,7 +321,7 @@ export default function AdmissionsPage() {
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: 15,
-                    border: `1px solid ${errors.email ? 'var(--color-primary-maroon)' : '#ddd'}`,
+                    border: `1px solid ${errors.email ? 'var(--color-primary-maroon)' : 'var(--color-border-light)'}`,
                     borderRadius: 4,
                     backgroundColor: 'var(--color-white)',
                   }}
@@ -360,7 +360,7 @@ export default function AdmissionsPage() {
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: 15,
-                    border: `1px solid ${errors.phone ? 'var(--color-primary-maroon)' : '#ddd'}`,
+                    border: `1px solid ${errors.phone ? 'var(--color-primary-maroon)' : 'var(--color-border-light)'}`,
                     borderRadius: 4,
                     backgroundColor: 'var(--color-white)',
                   }}
@@ -398,7 +398,7 @@ export default function AdmissionsPage() {
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: 15,
-                    border: `1px solid ${errors.studentGrade ? 'var(--color-primary-maroon)' : '#ddd'}`,
+                    border: `1px solid ${errors.studentGrade ? 'var(--color-primary-maroon)' : 'var(--color-border-light)'}`,
                     borderRadius: 4,
                     backgroundColor: 'var(--color-white)',
                   }}
@@ -440,7 +440,7 @@ export default function AdmissionsPage() {
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: 15,
-                    border: '1px solid #ddd',
+                    border: '1px solid var(--color-border-light)',
                     borderRadius: 4,
                     backgroundColor: 'var(--color-white)',
                     fontFamily: 'inherit',
@@ -462,7 +462,7 @@ export default function AdmissionsPage() {
                   padding: '14px 32px',
                   fontSize: 15,
                   fontWeight: 600,
-                  backgroundColor: isSubmitting ? '#ccc' : 'var(--color-primary-maroon)',
+                  backgroundColor: isSubmitting ? 'var(--color-gray-light)' : 'var(--color-primary-maroon)',
                   color: 'var(--color-white)',
                   border: 'none',
                   borderRadius: 4,
@@ -496,7 +496,7 @@ export default function AdmissionsPage() {
                   style={{
                     marginTop: 24,
                     padding: 16,
-                    backgroundColor: '#fff5f5',
+                    backgroundColor: 'var(--color-offwhite)',
                     borderLeft: '4px solid var(--color-primary-maroon)',
                     borderRadius: 4,
                   }}

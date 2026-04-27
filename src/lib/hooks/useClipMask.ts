@@ -41,7 +41,7 @@ export function useClipMask({
       tl.fromTo(
         textRef.current,
         { scale: 1.5, opacity: 0.25, color: 'rgba(255,255,255,0.25)' },
-        { scale: 1, opacity: 1, color: '#333333', duration: 1 },
+        { scale: 1, opacity: 1, color: 'var(--color-gray)', duration: 1 },
         0
       );
 

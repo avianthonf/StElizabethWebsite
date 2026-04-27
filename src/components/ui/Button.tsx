@@ -29,11 +29,11 @@ export function Button({
 
   const variants: Record<ButtonVariant, string> = {
     primary:
-      'bg-[#000] text-white border-2 border-[#000] hover:bg-transparent hover:text-white',
+      'bg-black text-white border-2 border-black hover:bg-transparent hover:text-white',
     outline:
-      'bg-transparent text-[#000] border-2 border-[#000] hover:bg-[#000] hover:text-white',
+      'bg-transparent text-black border-2 border-black hover:bg-black hover:text-white',
     ghost:
-      'bg-transparent text-[#333] border-none p-0 hover:text-[#6C1F35] underline',
+      'bg-transparent text-gray-600 border-none p-0 hover:text-primary-maroon underline',
   };
 
   const Tag = href ? 'a' : 'button';
@@ -46,7 +46,7 @@ export function Button({
     >
       {/* Hover slide background */}
       <span
-        className="absolute inset-0 bg-[#6C1F35] transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"
+        className="absolute inset-0 bg-primary-maroon transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"
         aria-hidden="true"
       />
       <span className="relative z-10 flex items-center gap-2.5">

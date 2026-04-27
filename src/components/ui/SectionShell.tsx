@@ -8,10 +8,10 @@ interface SectionShellProps {
 
 const bgColorMap = {
   white: 'bg-white',
-  cream: 'bg-[#F5F5DC]',
-  maroon: 'bg-[#800000]',
-  navy: 'bg-[#002147]',
-  light: 'bg-[#F5F5F5]',
+  cream: 'bg-[var(--color-brand-sand)]',
+  maroon: 'bg-maroon',
+  navy: 'bg-[var(--color-brand-navy)]',
+  light: 'bg-[var(--color-gray-light)]',
 };
 
 const maxWidthMap = {

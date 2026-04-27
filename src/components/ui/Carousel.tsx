@@ -94,7 +94,7 @@ export function Carousel({
               key={index}
               onClick={() => scrollTo(index)}
               className={`h-2 w-2 rounded-full transition ${
-                index === selectedIndex ? 'bg-[#800000] w-8' : 'bg-zinc-300'
+                index === selectedIndex ? 'bg-maroon w-8' : 'bg-zinc-300'
               }`}
               aria-label={`Go to slide ${index + 1}`}
             />

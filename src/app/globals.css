@@ -61,6 +61,25 @@ body {
 }
 
 /* ========================================
+   CUSTOM TAILWIND UTILITIES FOR DESIGN TOKENS
+   ======================================== */
+
+/* Background colors */
+.bg-maroon { background-color: var(--color-brand-maroon); }
+.bg-primary-maroon { background-color: var(--color-primary-maroon); }
+.bg-secondary-maroon { background-color: var(--color-secondary-maroon); }
+.bg-deep-maroon { background-color: var(--color-deep-maroon); }
+
+/* Text colors */
+.text-maroon { color: var(--color-brand-maroon); }
+.text-primary-maroon { color: var(--color-primary-maroon); }
+.text-secondary-maroon { color: var(--color-secondary-maroon); }
+
+/* Border colors */
+.border-maroon { border-color: var(--color-brand-maroon); }
+.border-primary-maroon { border-color: var(--color-primary-maroon); }
+
+/* ========================================
    TYPOGRAPHY (SOP-001 Fluid Scale)
    ======================================== */
 
@@ -87,7 +106,8 @@ body {
 }
 
 /* Section h2 — "WE VALUE", "DISCOVER YOUR PASSIONS" */
-.text-h2 {
+.text-h2,
+.walker-heading {
   font-family: var(--font-heading), Montserrat, sans-serif;
   font-weight: 800;
   font-size: clamp(2rem, 4vw, 4.5rem);
@@ -106,7 +126,8 @@ body {
 }
 
 /* Overline — small red label above headings */
-.text-overline {
+.text-overline,
+.walker-overline {
   font-family: var(--font-heading), Montserrat, sans-serif;
   font-weight: 700;
   font-size: 11px;
@@ -116,7 +137,8 @@ body {
 }
 
 /* Body large — 1.25rem, 1.6 line-height */
-.text-body-lg {
+.text-body-lg,
+.walker-body {
   font-family: var(--font-body), Inter, sans-serif;
   font-size: 1.25rem;
   line-height: 1.6;
@@ -273,10 +295,14 @@ body {
 
 .hero-mission-block {
   position: absolute;
-  bottom: clamp(40px, 8vh, 80px);
+  bottom: 0;
   left: clamp(24px, 4vw, 60px);
   z-index: 4;
   max-width: 380px;
+}
+
+.hero-mission-safe-bottom {
+  padding-bottom: max(clamp(40px, 8vh, 80px), env(safe-area-inset-bottom));
 }
 
 /* ========================================

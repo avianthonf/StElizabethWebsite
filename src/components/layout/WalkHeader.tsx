@@ -7,6 +7,12 @@ import { Menu, X, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RemoveScroll } from 'react-remove-scroll';
 
+declare global {
+  interface WindowEventMap {
+    'horizontal-scroll-progress': CustomEvent<{ progress: number }>;
+  }
+}
+
 /**
  * Walker Header — "Ghost Nav" behavior (SOP-001 + Blueprint).
  *
@@ -24,12 +30,32 @@ export function WalkHeader() {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const headerRef = useRef<HTMLDivElement>(null);
 
-  // Ghost nav — transparent at top, solid when scrolled
+  // Ghost nav — transparent at top, solid when scrolled horizontally
+  // Works with both:
+  //   A) Normal vertical scroll (fallback)
+  //   B) HomepageHorizontalScroll horizontal scroll-jacking
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 100);
-    handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    // Listen for horizontal scroll progress events from HomepageHorizontalScroll
+    // Format: detail = { progress: 0-1 }
+    const handleHorizontalScroll = (e: WindowEventMap['horizontal-scroll-progress']) => {
+      // Progress > 5% triggers the solid header state
+      setScrolled(e.detail.progress > 0.05);
+    };
+
+    // Trigger solid header after scrolling 10% of viewport height (vertical)
+    // or 5% of horizontal scroll progress (horizontal scroll-jacking).
+    const handleVerticalScroll = () => setScrolled(window.scrollY > window.innerHeight * 0.1);
+
+    window.addEventListener('horizontal-scroll-progress', handleHorizontalScroll);
+    window.addEventListener('scroll', handleVerticalScroll, { passive: true });
+
+    // Initialize state
+    handleVerticalScroll();
+
+    return () => {
+      window.removeEventListener('horizontal-scroll-progress', handleHorizontalScroll);
+      window.removeEventListener('scroll', handleVerticalScroll);
+    };
   }, []);
 
   // Close mobile menu on Escape key
@@ -45,8 +71,8 @@ export function WalkHeader() {
   }, [mobileOpen]);
 
   const isTransparent = !scrolled && !mobileOpen;
-  const textColor = isTransparent ? '#fff' : '#000';
-  const logoColor = isTransparent ? '#fff' : '#800000';
+  const textColor = isTransparent ? 'var(--color-white)' : 'var(--color-text-dark)';
+  const logoColor = isTransparent ? 'var(--color-white)' : 'var(--color-brand-maroon)';
 
   return (
     <>
@@ -55,7 +81,7 @@ export function WalkHeader() {
         ref={headerRef}
         className="fixed top-0 left-0 right-0 z-[9999] transition-all duration-400 ease-[cubic-bezier(0.25,1,0.5,1)]"
         style={{
-          backgroundColor: isTransparent ? 'transparent' : '#fff',
+          backgroundColor: isTransparent ? 'transparent' : 'var(--color-white)',
           boxShadow: scrolled ? '0 2px 24px rgba(0,0,0,0.08)' : 'none',
         }}
       >
@@ -110,10 +136,10 @@ export function WalkHeader() {
                   href={item.href}
                   style={{
                     fontFamily: 'var(--font-heading), Montserrat, sans-serif',
-                    fontWeight: 700,
-                    fontSize: 11,
+                    fontWeight: 800,
+                    fontSize: 'clamp(0.65rem, 0.8vw, 0.75rem)',
                     textTransform: 'uppercase',
-                    letterSpacing: '0.12em',
+                    letterSpacing: '0.15em',
                     color: textColor,
                     textDecoration: 'none',
                     whiteSpace: 'nowrap',
@@ -134,7 +160,7 @@ export function WalkHeader() {
                       top: 'calc(100% + 16px)',
                       left: '50%',
                       transform: 'translateX(-50%)',
-                      background: '#fff',
+                      background: 'var(--color-white)',
                       borderRadius: 8,
                       boxShadow: '0 24px 64px rgba(0,0,0,0.12)',
                       minWidth: 200,
@@ -154,7 +180,7 @@ export function WalkHeader() {
                           fontWeight: 700,
                           textTransform: 'uppercase',
                           letterSpacing: '0.1em',
-                          color: '#333',
+                          color: 'var(--color-gray)',
                           textDecoration: 'none',
                         }}
                       >
@@ -238,7 +264,7 @@ export function WalkHeader() {
                 justifyContent: 'space-between',
                 padding: '0 24px',
                 height: 80,
-                borderBottom: '1px solid #E5E5E5',
+                borderBottom: '1px solid var(--color-border-light)',
                 flexShrink: 0,
               }}
             >
@@ -247,7 +273,7 @@ export function WalkHeader() {
                   fontFamily: 'var(--font-display), Playfair Display, serif',
                   fontSize: 18,
                   fontWeight: 700,
-                  color: '#000',
+                  color: 'var(--color-text-dark)',
                 }}
               >
                 St. Elizabeth
@@ -272,13 +298,13 @@ export function WalkHeader() {
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       padding: '18px 0',
-                      borderBottom: '1px solid #E5E5E5',
+                      borderBottom: '1px solid var(--color-border-light)',
                       fontFamily: 'var(--font-heading), Montserrat, sans-serif',
                       fontWeight: 800,
                       fontSize: 18,
                       textTransform: 'uppercase',
                       letterSpacing: '0.06em',
-                      color: '#000',
+                      color: 'var(--color-text-dark)',
                       textDecoration: 'none',
                     }}
                   >
@@ -301,9 +327,9 @@ export function WalkHeader() {
                             padding: '12px 0',
                             fontFamily: 'var(--font-body), Inter, sans-serif',
                             fontSize: 14,
-                            color: '#555',
+                            color: 'var(--color-gray)',
                             textDecoration: 'none',
-                            borderBottom: '1px solid #F5F5F5',
+                            borderBottom: '1px solid var(--color-gray-light)',
                           }}
                           onClick={() => setMobileOpen(false)}
                         >

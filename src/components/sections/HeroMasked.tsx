@@ -1,188 +1,170 @@
 'use client';
 
-import { useRef } from 'react';
-import { useClipMask } from '@/lib/hooks/useClipMask';
+import { useEffect, useRef } from 'react';
+import { gsap } from '@/lib/gsap-config';
 
-interface HeroMaskedProps {
-  heroImage?: string;
+declare global {
+  interface WindowEventMap {
+    'horizontal-scroll-hero': CustomEvent<{ progress: number }>;
+  }
 }
 
 /**
- * Walker "WE BELIEVE" Hero Section
+ * Walker "WE BELIEVE" Hero Section — Masking Engine (SOP-001).
  *
- * Architecture (SOP-001 + Blueprint):
- * - Outer container: h-[300vh] — creates 3x viewport scroll space
- * - Inner wrapper: h-screen sticky top-0 — pins while scrolling through 300vh
- * - Background: SVG with clipPath containing "WE BELIEVE" text
- * - GSAP ScrollTrigger: scrub: 1, end: '+=250%'
+ * The defining Walker effect: video is visible ONLY through the letters of
+ * "WE BELIEVE." The surrounding area is a solid wall. As horizontal scroll
+ * progresses, the text zooms from enormous (fills screen) down to readable size
+ * while the solid wall fades to reveal itself.
  *
- * Animation phases on scroll:
- * Phase 1 (0-30%): Full background visible, "WE BELIEVE" text transparent white
- * Phase 2 (30-70%): clipPath expands from center, background only through text
- * Phase 3 (70-100%): White overlay fills, text turns dark gray, section exits
+ * Implementation: SVG mask on a white rectangle overlaid on the background.
+ * The mask exposes the video only where the text letter shapes are.
+ *
+ * IMPORTANT: This component is used INSIDE HomepageHorizontalScroll which already
+ * has a ScrollTrigger with pin: true. We cannot have a nested pin — it silently fails.
+ * SOLUTION: Instead of a separate ScrollTrigger, we use a progress-based animation
+ * driven by a custom event dispatched from the parent's horizontal scroll handler.
+ * The animation fires when horizontal-scroll-hero fires (first ~12% of horizontal travel).
  */
-export function HeroMasked({ heroImage = '/images/videocover2-812-optimized.webp' }: HeroMaskedProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const imageRef = useRef<HTMLImageElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
-  const textRef = useRef<HTMLHeadingElement>(null);
+export function HeroMasked({ heroImage = '/images/videocover2-812-optimized.webp' }: { heroImage?: string }) {
+  const maskGroupRef = useRef<SVGGElement>(null);
+  const wallRef = useRef<SVGRectElement>(null);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const hasAnimatedRef = useRef(false);
 
-  const imageGroupRef = useRef<SVGGElement>(null);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
 
-  useClipMask({ containerRef, imageRef, overlayRef, textRef, imageGroupRef });
+    const heroTl = gsap.timeline({ paused: true });
+
+    // Zoom "WE BELIEVE" from enormous (scale 60x) down to readable (scale 1x)
+    // The wall fades from white to dark as the text zooms out
+    heroTl
+      .fromTo(
+        maskGroupRef.current,
+        { scale: 60, transformOrigin: '50% 50%' },
+        { scale: 1, ease: 'power2.out', duration: 1 }
+      )
+      .to(
+        wallRef.current,
+        { fill: 'rgba(0,0,0,0.55)', ease: 'power1.in', duration: 1 },
+        0
+      );
+
+    const handleHeroScroll = (e: WindowEventMap['horizontal-scroll-hero']) => {
+      if (hasAnimatedRef.current) return;
+
+      const progress = e.detail.progress;
+
+      // Fire animation during first ~12% of horizontal scroll
+      // Progress 0 → 0.12 maps to animation 0 → 1
+      if (progress <= 0.12) {
+        const t = progress / 0.12;
+        heroTl.progress(t);
+
+        if (progress >= 0.12) {
+          hasAnimatedRef.current = true;
+        }
+      }
+    };
+
+    window.addEventListener('horizontal-scroll-hero', handleHeroScroll);
+
+    return () => {
+      window.removeEventListener('horizontal-scroll-hero', handleHeroScroll);
+      heroTl.kill();
+    };
+  }, []);
 
   return (
     <section
-      ref={containerRef}
-      style={{ height: '300vh', position: 'relative' }}
-      aria-label="Hero section"
+      ref={sectionRef}
+      style={{
+        position: 'relative',
+        width: '100vw',
+        height: '100vh',
+        overflow: 'hidden',
+        backgroundColor: 'var(--color-text-dark)',
+      }}
     >
-      {/* Sticky viewport — stays in view while container scrolls */}
-      <div
-        className="hero-mask-inner"
+      {/* ── 1. Background Image / Video ───────────────────────────────── */}
+      <img
+        src={heroImage}
+        alt="St. Elizabeth High School campus"
+        aria-hidden="true"
         style={{
-          position: 'sticky',
-          top: 0,
-          height: '100vh',
-          overflow: 'hidden',
-          backgroundColor: '#000',
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          objectPosition: 'center',
         }}
-      >
-        {/* SVG Mask Layer — contains the masked background image */}
-        <svg
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-          }}
-          aria-hidden="true"
-        >
-          <defs>
-            {/* SVG clipPath using the "WE BELIEVE" text as the mask shape */}
-            <clipPath id="weBelieveClip" clipPathUnits="userSpaceOnUse">
-              {/* Group that will be scaled — start at scale(0.15) */}
-              <g
-                ref={imageGroupRef}
-                style={{ transformOrigin: 'center center', transform: 'scale(0.15)' }}
-              >
-                <image
-                  href={heroImage}
-                  width="100%"
-                  height="100%"
-                  preserveAspectRatio="xMidYMid slice"
-                />
-              </g>
-            </clipPath>
+      />
 
-            {/* Text outline clip — the text shape itself acts as a mask */}
-            <clipPath id="textOutlineClip" clipPathUnits="userSpaceOnUse">
+      {/* ── 2. SVG Mask Overlay ───────────────────────────────────────────
+          Mask logic (SVG spec):
+            - White pixels in mask = visible
+            - Black pixels in mask = hidden (transparent)
+          1. Fill entire mask canvas with WHITE → everything visible
+          2. Draw text in BLACK → cuts holes through the white
+          3. Apply mask to white wall rectangle
+          Result: only the letter shapes reveal the background video.
+      ─────────────────────────────────────────────────────────────────── */}
+      <svg
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 1 }}
+        viewBox="0 0 100 100"
+        preserveAspectRatio="xMidYMid slice"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <mask id="hero-text-mask">
+            {/* Step 1: Fill entire mask with white — everything visible */}
+            <rect width="100" height="100" fill="white" />
+
+            {/* Step 2: Text in BLACK cuts holes in the mask */}
+            <g ref={maskGroupRef}>
               <text
-                x="50%"
-                y="50%"
+                x="50"
+                y="54"
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fontFamily="var(--font-heading), Montserrat, sans-serif"
-                fontWeight={900}
-                fontSize="clamp(3rem, 10vw, 11rem)"
-                letterSpacing="0.04em"
-                fill="white"
+                fill="black"
+                style={{
+                  fontFamily: 'var(--font-heading), Montserrat, sans-serif',
+                  fontWeight: 900,
+                  fontSize: '13.5',
+                  textTransform: 'uppercase',
+                  letterSpacing: '-0.04em',
+                  lineHeight: 1,
+                }}
               >
                 We Believe
               </text>
-            </clipPath>
-          </defs>
+            </g>
+          </mask>
+        </defs>
 
-          {/* Masked background image — revealed through text */}
-          <rect
-            width="100%"
-            height="100%"
-            fill="url(#maskedImage)"
-            style={{ clipPath: 'url(#textOutlineClip)' }}
-          />
-
-          {/* Fallback: just show the clipped image */}
-          <image
-            href={heroImage}
-            width="100%"
-            height="100%"
-            preserveAspectRatio="xMidYMid slice"
-            style={{ clipPath: 'url(#textOutlineClip)' }}
-          />
-        </svg>
-
-        {/* Dark vignette overlay — fades in on scroll */}
-        <div
-          ref={overlayRef}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.4)',
-            pointerEvents: 'none',
-            transition: 'background-color 0.1s',
-          }}
+        {/* Step 3: White wall rectangle masked by the text mask
+            The masked rect only shows where the mask is white (inside letters).
+            So only the letter shapes reveal the background video. */}
+        <rect
+          ref={wallRef}
+          width="100"
+          height="100"
+          fill="rgba(255,255,255,1)"
+          mask="url(#hero-text-mask)"
         />
+      </svg>
 
-        {/* "WE BELIEVE" text — transparent at top, dark at scroll end */}
-        <h1
-          ref={textRef}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontFamily: 'var(--font-heading), Montserrat, sans-serif',
-            fontWeight: 900,
-            fontSize: 'clamp(4rem, 15vw, 18rem)',
-            lineHeight: 0.9,
-            textTransform: 'uppercase',
-            letterSpacing: '-0.02em',
-            color: 'rgba(255,255,255,0.25)',
-            userSelect: 'none',
-            pointerEvents: 'none',
-            margin: 0,
-            zIndex: 3,
-          }}
-        >
-          We Believe
-        </h1>
-
-        {/* Mission block — bottom left */}
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 'clamp(40px, 8vh, 80px)',
-            left: 'clamp(24px, 4vw, 60px)',
-            zIndex: 4,
-            maxWidth: 380,
-          }}
-        >
-          <p
-            style={{
-              fontFamily: 'var(--font-heading), Montserrat, sans-serif',
-              fontWeight: 700,
-              fontSize: 11,
-              textTransform: 'uppercase',
-              letterSpacing: '0.18em',
-              color: '#6C1F35',
-              marginBottom: 10,
-            }}
-          >
-            St. Elizabeth High School
-          </p>
-          <p
-            style={{
-              fontFamily: 'var(--font-body), Inter, sans-serif',
-              fontSize: 16,
-              lineHeight: 1.6,
-              color: 'rgba(255,255,255,0.85)',
-              maxWidth: 320,
-            }}
-          >
-            Nurturing minds, hearts, and spirits through faith, excellence, and service since 1967.
-          </p>
-        </div>
+      {/* ── 3. Mission Block — bottom-left, clamp-based breathing room ─── */}
+      <div className="hero-mission-block hero-mission-safe-bottom" style={{ zIndex: 2, maxWidth: 380 }}>
+        <p className="text-overline" style={{ marginBottom: 10 }}>
+          St. Elizabeth High School
+        </p>
+        <p className="text-body-lg" style={{ maxWidth: 320, color: 'rgba(255,255,255,0.85)' }}>
+          Nurturing minds, hearts, and spirits through faith, excellence, and service since 1967.
+        </p>
       </div>
     </section>
   );

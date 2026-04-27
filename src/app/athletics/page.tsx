@@ -183,7 +183,7 @@ export default function AthleticsPage() {
                 justifyContent: 'center',
               }}
             >
-              <p style={{ fontSize: 14, color: '#999' }}>
+              <p style={{ fontSize: 14, color: 'var(--color-gray)' }}>
                 [Individual athlete photo]
               </p>
             </div>
@@ -316,7 +316,7 @@ function SportCard({
         padding: 24,
         backgroundColor: 'var(--color-white)',
         borderRadius: 8,
-        border: '1px solid #e5e5e5',
+        border: '1px solid var(--color-border-light)',
       }}
     >
       <h3
