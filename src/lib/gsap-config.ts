@@ -4,8 +4,12 @@ import { Flip } from 'gsap/Flip';
 
 // Register GSAP plugins ONCE at module load
 // All GSAP animations throughout the app use these plugins
-if (typeof window !== 'undefined') {
+// Singleton guard to prevent double-registration in React strict mode
+let pluginsRegistered = false;
+
+if (typeof window !== 'undefined' && !pluginsRegistered) {
   gsap.registerPlugin(ScrollTrigger, Flip);
+  pluginsRegistered = true;
 
   // Global GSAP defaults matching Walker physics specs
   gsap.defaults({
