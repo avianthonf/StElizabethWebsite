@@ -1,13 +1,67 @@
+'use client';
+
 import type { Metadata } from 'next';
+import { useState, useRef, FormEvent } from 'react';
 import { ContentPage, PageHero } from '@/components/templates/ContentPage';
 import { MapPin, Phone, Mail, Clock } from 'lucide-react';
-
-export const metadata: Metadata = {
-  title: 'Contact Us | St. Elizabeth High School',
-  description: 'Get in touch with St. Elizabeth High School, Pomburpa, Goa. Visit us, call, or email for inquiries about admissions, academics, and school programs.',
-};
+import { validateContactForm, isHoneypotFilled, type ContactFormData, type FormErrors } from '@/lib/form-validation';
 
 export default function ContactPage() {
+  const [formData, setFormData] = useState<ContactFormData>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    subject: '',
+    message: '',
+    website: '', // honeypot
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const firstErrorRef = useRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear error for this field when user starts typing
+    if (errors[name]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    // Honeypot check
+    if (isHoneypotFilled(formData.website)) {
+      console.warn('Honeypot triggered - bot detected');
+      return; // Silently fail for bots
+    }
+
+    // Validate
+    const validationErrors = validateContactForm(formData);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      // Focus first error field
+      setTimeout(() => firstErrorRef.current?.focus(), 100);
+      return;
+    }
+
+    setIsSubmitting(true);
+    // Submission logic will be added in Plan 03-02
+    console.log('Form valid, ready for submission:', formData);
+    setIsSubmitting(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    if (e.key === 'Escape') {
+      setErrors({});
+    }
+  };
   return (
     <ContentPage>
       <PageHero
@@ -127,32 +181,38 @@ export default function ContactPage() {
             respond within 1-2 business days.
           </p>
 
-          {/* Form - Disabled for Phase 3 */}
+          {/* Contact Form */}
           <div
             style={{
               backgroundColor: 'var(--color-white)',
               padding: 40,
               borderRadius: 8,
-              border: '2px dashed var(--color-primary-maroon)',
             }}
           >
-            <p
-              style={{
-                fontSize: 14,
-                color: 'var(--color-primary-maroon)',
-                marginBottom: 24,
-                fontWeight: 600,
-                textAlign: 'center',
-              }}
-            >
-              ⚠️ Form integration coming in Phase 3 (Requirements FORM-01 through FORM-05)
-            </p>
+            {/* Aria-live region for screen reader announcements */}
+            <div aria-live="polite" aria-atomic="true" style={{ position: 'absolute', left: '-9999px' }}>
+              {Object.keys(errors).length > 0 && `Form has ${Object.keys(errors).length} error${Object.keys(errors).length > 1 ? 's' : ''}`}
+            </div>
 
-            <form style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {/* Honeypot field - hidden from users */}
+              <div style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' }} aria-hidden="true">
+                <label htmlFor="website">Leave this field blank</label>
+                <input
+                  type="text"
+                  id="website"
+                  name="website"
+                  value={formData.website}
+                  onChange={handleChange}
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
+              </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                 <div>
                   <label
-                    htmlFor="first-name"
+                    htmlFor="firstName"
                     style={{
                       display: 'block',
                       fontSize: 14,
@@ -165,23 +225,33 @@ export default function ContactPage() {
                   </label>
                   <input
                     type="text"
-                    id="first-name"
-                    name="first-name"
-                    disabled
+                    id="firstName"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    aria-required="true"
+                    aria-invalid={!!errors.firstName}
+                    aria-describedby={errors.firstName ? 'firstName-error' : undefined}
+                    ref={errors.firstName ? firstErrorRef : undefined}
                     style={{
                       width: '100%',
                       padding: '12px 16px',
                       fontSize: 15,
-                      border: '1px solid #ddd',
+                      border: `1px solid ${errors.firstName ? 'var(--color-primary-maroon)' : '#ddd'}`,
                       borderRadius: 4,
-                      backgroundColor: '#f9f9f9',
+                      backgroundColor: 'var(--color-white)',
                     }}
                   />
+                  {errors.firstName && (
+                    <p id="firstName-error" style={{ fontSize: 14, color: 'var(--color-primary-maroon)', marginTop: 4 }} role="alert">
+                      {errors.firstName}
+                    </p>
+                  )}
                 </div>
 
                 <div>
                   <label
-                    htmlFor="last-name"
+                    htmlFor="lastName"
                     style={{
                       display: 'block',
                       fontSize: 14,
@@ -194,18 +264,28 @@ export default function ContactPage() {
                   </label>
                   <input
                     type="text"
-                    id="last-name"
-                    name="last-name"
-                    disabled
+                    id="lastName"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    aria-required="true"
+                    aria-invalid={!!errors.lastName}
+                    aria-describedby={errors.lastName ? 'lastName-error' : undefined}
+                    ref={errors.lastName && !errors.firstName ? firstErrorRef : undefined}
                     style={{
                       width: '100%',
                       padding: '12px 16px',
                       fontSize: 15,
-                      border: '1px solid #ddd',
+                      border: `1px solid ${errors.lastName ? 'var(--color-primary-maroon)' : '#ddd'}`,
                       borderRadius: 4,
-                      backgroundColor: '#f9f9f9',
+                      backgroundColor: 'var(--color-white)',
                     }}
                   />
+                  {errors.lastName && (
+                    <p id="lastName-error" style={{ fontSize: 14, color: 'var(--color-primary-maroon)', marginTop: 4 }} role="alert">
+                      {errors.lastName}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -226,16 +306,26 @@ export default function ContactPage() {
                   type="email"
                   id="email"
                   name="email"
-                  disabled
+                  value={formData.email}
+                  onChange={handleChange}
+                  aria-required="true"
+                  aria-invalid={!!errors.email}
+                  aria-describedby={errors.email ? 'email-error' : undefined}
+                  ref={errors.email && !errors.firstName && !errors.lastName ? firstErrorRef : undefined}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: 15,
-                    border: '1px solid #ddd',
+                    border: `1px solid ${errors.email ? 'var(--color-primary-maroon)' : '#ddd'}`,
                     borderRadius: 4,
-                    backgroundColor: '#f9f9f9',
+                    backgroundColor: 'var(--color-white)',
                   }}
                 />
+                {errors.email && (
+                  <p id="email-error" style={{ fontSize: 14, color: 'var(--color-primary-maroon)', marginTop: 4 }} role="alert">
+                    {errors.email}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -255,14 +345,15 @@ export default function ContactPage() {
                   type="tel"
                   id="phone"
                   name="phone"
-                  disabled
+                  value={formData.phone}
+                  onChange={handleChange}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: 15,
                     border: '1px solid #ddd',
                     borderRadius: 4,
-                    backgroundColor: '#f9f9f9',
+                    backgroundColor: 'var(--color-white)',
                   }}
                 />
               </div>
@@ -283,14 +374,19 @@ export default function ContactPage() {
                 <select
                   id="subject"
                   name="subject"
-                  disabled
+                  value={formData.subject}
+                  onChange={handleChange}
+                  aria-required="true"
+                  aria-invalid={!!errors.subject}
+                  aria-describedby={errors.subject ? 'subject-error' : undefined}
+                  ref={errors.subject && !errors.firstName && !errors.lastName && !errors.email ? firstErrorRef : undefined}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: 15,
-                    border: '1px solid #ddd',
+                    border: `1px solid ${errors.subject ? 'var(--color-primary-maroon)' : '#ddd'}`,
                     borderRadius: 4,
-                    backgroundColor: '#f9f9f9',
+                    backgroundColor: 'var(--color-white)',
                   }}
                 >
                   <option value="">Select a subject</option>
@@ -301,6 +397,11 @@ export default function ContactPage() {
                   <option value="general">General Inquiry</option>
                   <option value="other">Other</option>
                 </select>
+                {errors.subject && (
+                  <p id="subject-error" style={{ fontSize: 14, color: 'var(--color-primary-maroon)', marginTop: 4 }} role="alert">
+                    {errors.subject}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -320,34 +421,45 @@ export default function ContactPage() {
                   id="message"
                   name="message"
                   rows={6}
-                  disabled
+                  value={formData.message}
+                  onChange={handleChange}
+                  aria-required="true"
+                  aria-invalid={!!errors.message}
+                  aria-describedby={errors.message ? 'message-error' : undefined}
+                  ref={errors.message && !errors.firstName && !errors.lastName && !errors.email && !errors.subject ? firstErrorRef : undefined}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: 15,
-                    border: '1px solid #ddd',
+                    border: `1px solid ${errors.message ? 'var(--color-primary-maroon)' : '#ddd'}`,
                     borderRadius: 4,
-                    backgroundColor: '#f9f9f9',
+                    backgroundColor: 'var(--color-white)',
                     fontFamily: 'inherit',
                   }}
                 />
+                {errors.message && (
+                  <p id="message-error" style={{ fontSize: 14, color: 'var(--color-primary-maroon)', marginTop: 4 }} role="alert">
+                    {errors.message}
+                  </p>
+                )}
               </div>
 
               <button
                 type="submit"
-                disabled
+                disabled={isSubmitting}
                 style={{
                   padding: '14px 32px',
                   fontSize: 15,
                   fontWeight: 600,
-                  backgroundColor: '#ccc',
-                  color: '#666',
+                  backgroundColor: isSubmitting ? '#999' : 'var(--color-primary-maroon)',
+                  color: 'var(--color-white)',
                   border: 'none',
                   borderRadius: 4,
-                  cursor: 'not-allowed',
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                  transition: 'background-color 0.2s',
                 }}
               >
-                Form submission coming in Phase 3
+                {isSubmitting ? 'Validating...' : 'Send Message'}
               </button>
             </form>
           </div>
