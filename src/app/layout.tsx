@@ -2,20 +2,31 @@ import type { Metadata } from "next";
 import { Inter, Playfair_Display, Montserrat } from "next/font/google";
 import "./globals.css";
 
+// Font optimization with next/font/google
+// Preload critical fonts to eliminate FOIT on hero sections
 const inter = Inter({
-  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+  preload: true,
+  fallback: ["system-ui", "arial"],
 });
 
 const playfair = Playfair_Display({
-  variable: "--font-playfair",
   subsets: ["latin"],
+  display: "swap",
+  variable: "--font-playfair",
+  preload: true,
+  fallback: ["Georgia", "serif"],
 });
 
 const montserrat = Montserrat({
-  variable: "--font-montserrat",
   subsets: ["latin"],
   weight: ["400", "700", "800", "900"],
+  display: "swap",
+  variable: "--font-montserrat",
+  preload: true,
+  fallback: ["system-ui", "arial"],
 });
 
 export const metadata: Metadata = {
