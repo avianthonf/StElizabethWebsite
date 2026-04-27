@@ -30,8 +30,26 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "St. Elizabeth High School Pomburpa",
-  description: "A modern school website for St. Elizabeth High School Pomburpa.",
+  title: "St. Elizabeth High School | Pomburpa, Goa",
+  description: "A Catholic high school in Pomburpa, Goa, India, dedicated to academic excellence, faith formation, and service. Empowering students through values-driven education.",
+  keywords: ["St. Elizabeth High School", "Catholic school Goa", "Pomburpa school", "high school Goa", "Christian education India"],
+  authors: [{ name: "St. Elizabeth High School" }],
+  openGraph: {
+    title: "St. Elizabeth High School | Pomburpa, Goa",
+    description: "A Catholic high school in Pomburpa, Goa, dedicated to academic excellence, faith formation, and service.",
+    url: "https://stelizabethhighschool.edu.in",
+    siteName: "St. Elizabeth High School",
+    locale: "en_IN",
+    type: "website",
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({
