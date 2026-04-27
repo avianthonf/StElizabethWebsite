@@ -1,5 +1,5 @@
-import { HeroMaskSection } from "@/components/sections/HeroMaskSection";
-import { ValuesScrollCarousel } from "@/components/sections/ValuesScrollCarousel";
+import { HeroMasked } from "@/components/sections/HeroMasked";
+import { ValueCarousel } from "@/components/sections/ValueCarousel";
 import { StickySplitSection } from "@/components/sections/StickySplitSection";
 import { DivisionsTabs } from "@/components/sections/DivisionsTabs";
 import { FooterCtaSection } from "@/components/sections/FooterCtaSection";
@@ -47,34 +47,38 @@ export default function Home() {
 
       <main>
         {/* SECTION 1: Hero — WE BELIEVE with clipping mask */}
-        <HeroMaskSection heroImage={IMAGES.heroCampus} />
+        <HeroMasked heroImage={IMAGES.heroCampus} />
 
         {/* SECTION 2: We Value — scroll-linked horizontal carousel */}
-        <ValuesScrollCarousel
+        <ValueCarousel
           values={[
             {
               number: "01",
               image: IMAGES.curiosity,
               title: "Curiosity",
               description: "We spark a lifelong love of learning through inquiry, exploration, and wonder.",
+              href: "#",
             },
             {
               number: "02",
               image: IMAGES.dignity,
               title: "Dignity",
               description: "Every person is made in the image of God and deserves respect and compassion.",
+              href: "#",
             },
             {
               number: "03",
               image: IMAGES.honor,
               title: "Honor",
               description: "We act with integrity — doing what's right even when no one is watching.",
+              href: "#",
             },
             {
               number: "04",
               image: IMAGES.kindness,
               title: "Kindness",
               description: "We build a community where everyone feels seen, valued, and supported.",
+              href: "#",
             },
           ]}
         />
@@ -137,7 +141,7 @@ export default function Home() {
         />
 
         {/* SECTION 5: Discover Your Passions — cutout panels */}
-        <div style={{ backgroundColor: "var(--walker-white)" }}>
+        <div style={{ backgroundColor: "var(--color-white)" }}>
           <div
             className="walker-container"
             style={{ paddingTop: "var(--section-padding-y)", paddingBottom: 40 }}
@@ -158,8 +162,8 @@ export default function Home() {
 
           {/* Athletics panel — maroon background */}
           <PassionsPanel
-            bg="var(--walker-maroon)"
-            textColor="var(--walker-white)"
+            bg="var(--color-primary-maroon)"
+            textColor="var(--color-white)"
             number="01"
             label="Athletics"
             description="From state championships to personal bests, our athletic program builds character through competition. 23 sports, 70+ teams, and a philosophy that prioritizes both excellence and sportsmanship."
@@ -169,8 +173,8 @@ export default function Home() {
 
           {/* Arts panel — white background */}
           <PassionsPanel
-            bg="var(--walker-white)"
-            textColor="var(--walker-black)"
+            bg="var(--color-white)"
+            textColor="var(--color-text-dark)"
             number="02"
             label="Arts"
             description="Creativity flourishes here — from award-winning theatre productions to studio art exhibitions. Every student participates in the arts, developing confidence, expression, and an appreciation for beauty."
@@ -180,8 +184,8 @@ export default function Home() {
 
           {/* Academics panel — black background */}
           <PassionsPanel
-            bg="var(--walker-black)"
-            textColor="var(--walker-white)"
+            bg="var(--color-text-dark)"
+            textColor="var(--color-white)"
             number="03"
             label="Academics"
             description="Rigorous college-preparatory curriculum, dedicated faculty, and a culture of high expectations. Our students consistently gain admission to the nation's most selective colleges and universities."
@@ -257,8 +261,12 @@ function PassionsPanel({
   image: string;
   imagePosition: "left" | "right";
 }) {
+  // Ensure WCAG AA contrast ratio (4.5:1 minimum)
+  // On maroon background (#6c1f35), dark text has poor contrast - use white instead
   const descColor =
-    bg === "var(--walker-black)" ? "rgba(255,255,255,0.7)" : "rgba(51,51,51,0.7)";
+    bg === "var(--color-text-dark)" ? "rgba(255,255,255,0.7)" :
+    bg === "var(--color-primary-maroon)" ? "rgba(255,255,255,0.85)" :
+    "rgba(51,51,51,0.7)";
   return (
     <div
       className="cutout-panel"
@@ -291,7 +299,7 @@ function PassionsPanel({
             maxWidth: "45%",
             objectFit: "contain",
             filter:
-              bg === "var(--walker-black)"
+              bg === "var(--color-text-dark)"
                 ? "brightness(1.2) drop-shadow(0 20px 60px rgba(0,0,0,0.5))"
                 : "drop-shadow(0 20px 60px rgba(0,0,0,0.2))",
           }}
