@@ -5,39 +5,46 @@ import { DivisionsTabs } from "@/components/sections/DivisionsTabs";
 import { FooterCtaSection } from "@/components/sections/FooterCtaSection";
 import { WalkHeader } from "@/components/layout/WalkHeader";
 
-// Image mapping — Walker School images mapped to actual downloaded files
+// PLACEHOLDER: Using Walker School images until St. Elizabeth photos provided
+// TODO: Replace with actual St. Elizabeth High School photos
+// Image mapping — temporary Walker School images
 const IMAGES = {
-  // Hero — videocover is the campus hero image
+  // Hero — campus exterior or iconic building shot
   heroCampus: "/images/videocover2-812-optimized.webp",
-  // We Value carousel — 4 value images
-  curiosity: "/images/Curiosity-310-optimized.webp",
-  dignity: "/images/dignity-311-optimized.webp",
-  honor: "/images/Honor-312-optimized.webp",
-  kindness: "/images/Kindness-309-optimized.webp",
-  // Accolades — student portrait on maroon + masonry grid
+
+  // Core Values carousel — 4 images representing each value
+  faith: "/images/Curiosity-310-optimized.webp",
+  excellence: "/images/dignity-311-optimized.webp",
+  service: "/images/Honor-312-optimized.webp",
+  community: "/images/Kindness-309-optimized.webp",
+
+  // About section — student portraits and campus life
   studentPortrait: "/images/Bitmap12-11-optimized.webp",
   gallery1: "/images/experiencegridhomejacob-662.jpg",
   gallery2: "/images/experiencegridhomemiddleschoolclassroom-663.jpg",
   gallery3: "/images/experiencegridhomeavi-661.jpg",
   gallery4: "/images/experiencegrdhomefootballmiddleschool-660.jpg",
-  // Mission
+
+  // Mission section — faith, academics, community
   mission1: "/images/tws_fall2022298min_317-optimized.webp",
   mission2: "/images/tws_commencement-99-optimized.webp",
   mission3: "/images/experiencegridhomevollyball-671.jpg",
   mission4: "/images/lowerschoolsciencemyles-537-Experience-Grid_1849.webp",
-  // Cutout panels — athletics and arts
+
+  // Student Life panels — athletics, arts, academics
   athleticsCutout: "/images/athleticscutout-825.png",
-  // artsCutout: use experience grid image as stand-in
   artsCutout: "/images/experiencegridhomeprimaryschool-672.jpg",
-  // Divisions tabs
-  primarySchool: "/images/experiencegridhomeprimaryschool-672.jpg",
-  lowerSchool: "/images/experiencegridlowerschool-670.jpg",
-  middleSchool: "/images/middleschoolboys-617-Experience-Grid_2147.webp",
-  upperSchool: "/images/experiencegridhomeupperschool-668.jpg",
-  // Footer CTA aerial — use the large campus image
+  academicsCutout: "/images/Emmy_Cutout-813.png",
+
+  // Divisions (grades 8-12)
+  grade8: "/images/middleschoolboys-617-Experience-Grid_2147.webp",
+  grade9: "/images/experiencegridhomeupperschool-668.jpg",
+  grade10: "/images/experiencegridlowerschool-670.jpg",
+  grade11: "/images/experiencegridhomeprimaryschool-672.jpg",
+  grade12: "/images/tws_commencement-99-optimized.webp",
+
+  // Footer CTA — aerial campus view or iconic building
   campusAerial: "/images/tws_fall2448-980-optimized.webp",
-  // Emmy cutout
-  emmyCutout: "/images/Emmy_Cutout-813.png",
 };
 
 export default function Home() {
