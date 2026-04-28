@@ -144,6 +144,7 @@ export function HeroMasked({
         <p className="text-overline" style={{ marginBottom: 10 }}>
           St. Elizabeth High School
         </p>
+        <h1 className="sr-only">St. Elizabeth High School</h1>
         <p className="text-body-lg" style={{ maxWidth: 320, color: 'rgba(255,255,255,0.85)' }}>
           Nurturing minds, hearts, and spirits through faith, excellence, and service since 1967.
         </p>

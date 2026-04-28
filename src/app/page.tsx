@@ -378,7 +378,7 @@ function HomeHorizontalScroll() {
       <WalkHeader />
 
       {/* Tall container creates scroll space (400vh = 4x viewport) */}
-      <div ref={containerRef} style={{ height: '400vh' }}>
+      <div ref={containerRef} style={{ height: '400vh', position: 'relative' }}>
         {/* Sticky wrapper pins the viewport during scroll */}
         <div style={{
           position: 'sticky',
@@ -614,12 +614,9 @@ export default function Home() {
 
   if (!mounted) {
     return (
-      <>
-        <WalkHeader />
-        <main>
-          <SkeletonLoader variant="section" />
-        </main>
-      </>
+      <main>
+        <SkeletonLoader variant="section" />
+      </main>
     );
   }
 

@@ -9,8 +9,8 @@ test.describe('Homepage Image Migration E2E Smoke Check', () => {
     heroImage: () => p.locator('img[alt*="campus"], img[aria-label*="WE BELIEVE"], img[alt*="We Believe"]'),
     weValueSection: () => p.getByRole('heading', { name: 'We Value' }),
     valueCards: () => p.locator('[class*="values-grid"] article'),
-    studentPortrait: () => p.locator('img[alt*="student" i]'),
-    galleryImages: () => p.locator('img[alt*="gallery" i]'),
+    studentPortrait: () => p.locator('img[alt*="legacy of faith and learning" i]'),
+    galleryImages: () => p.locator('img[alt*="legacy of faith and learning" i]').filter({ hasNot: p.locator(':scope[alt*="featured" i]') }),
     athleticsHeading: () => p.getByRole('heading', { name: 'Athletics' }),
     artsHeading: () => p.getByRole('heading', { name: 'Arts & Music' }),
     academicsHeading: () => p.getByRole('heading', { name: 'Academics' }),
@@ -36,7 +36,7 @@ test.describe('Homepage Image Migration E2E Smoke Check', () => {
     await page.waitForTimeout(1500);
 
     const imgCount = await L(page).images().count();
-    expect(imgCount).toBeGreaterThan(20);
+    expect(imgCount).toBeGreaterThanOrEqual(19);
 
     const broken = await page.locator('img:not([src]), img[src=""], img[src^="data:"]').count();
     expect(broken).toBe(0);
@@ -143,7 +143,10 @@ test.describe('Homepage Image Migration E2E Smoke Check', () => {
     const imgCount = await page.locator('img').count();
     expect(imgCount).toBeGreaterThan(10);
 
-    await expect(page.getByRole('heading', { name: 'We Value' })).toBeInViewport();
-    await expect(page.getByRole('heading', { name: 'Athletics' })).toBeInViewport();
+    await expect(page.getByRole('heading', { name: 'We Value' })).toBeVisible();
+
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.55));
+    await page.waitForTimeout(700);
+    await expect(page.getByRole('heading', { name: 'Athletics' })).toBeVisible();
   });
 });

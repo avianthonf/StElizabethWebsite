@@ -71,8 +71,8 @@ export function WalkHeader() {
   }, [mobileOpen]);
 
   const isTransparent = !scrolled && !mobileOpen;
-  const textColor = isTransparent ? 'var(--color-white)' : 'var(--color-text-dark)';
-  const logoColor = isTransparent ? 'var(--color-white)' : 'var(--color-brand-maroon)';
+  const textColor = isTransparent ? 'var(--color-text-dark)' : 'var(--color-text-dark)';
+  const logoColor = isTransparent ? 'var(--color-brand-maroon)' : 'var(--color-brand-maroon)';
 
   return (
     <>
@@ -81,8 +81,9 @@ export function WalkHeader() {
         ref={headerRef}
         className="fixed top-0 left-0 right-0 z-[9999] transition-all duration-400 ease-[cubic-bezier(0.25,1,0.5,1)]"
         style={{
-          backgroundColor: isTransparent ? 'transparent' : 'var(--color-white)',
-          boxShadow: scrolled ? '0 2px 24px rgba(0,0,0,0.08)' : 'none',
+          backgroundColor: isTransparent ? 'rgba(255,255,255,0.94)' : 'var(--color-white)',
+          boxShadow: scrolled ? '0 2px 24px rgba(0,0,0,0.08)' : '0 2px 24px rgba(0,0,0,0.06)',
+          backdropFilter: 'blur(10px)',
         }}
       >
         <div
