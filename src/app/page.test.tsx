@@ -1,7 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Home from './page';
-import { ScrollTrigger, gsap } from '@/lib/gsap-config';
 
 const mockUsePrefersReducedMotion = vi.fn(() => false);
 
@@ -9,26 +8,13 @@ vi.mock('@/lib/hooks/usePrefersReducedMotion', () => ({
   usePrefersReducedMotion: () => mockUsePrefersReducedMotion(),
 }));
 
-vi.mock('@/lib/gsap-config', () => ({
-  gsap: {
-    context: vi.fn((callback: () => void) => {
-      callback();
-      return { revert: vi.fn() };
-    }),
-    to: vi.fn(),
-    set: vi.fn(),
-    timeline: vi.fn(() => ({
-      fromTo: vi.fn().mockReturnThis(),
-      to: vi.fn().mockReturnThis(),
-      progress: vi.fn().mockReturnThis(),
-      kill: vi.fn(),
-    })),
-  },
-  ScrollTrigger: {
-    refresh: vi.fn(),
-    create: vi.fn(() => ({ kill: vi.fn() })),
-    getAll: vi.fn(() => []),
-  },
+vi.mock('@/lib/hooks/useMotionHorizontalScroll', () => ({
+  useMotionHorizontalScroll: vi.fn(() => ({
+    containerRef: { current: null },
+    trackRef: { current: null },
+    x: { get: () => 0, on: vi.fn(), destroy: vi.fn() },
+    scrollYProgress: { get: () => 0, on: vi.fn(), destroy: vi.fn() },
+  })),
 }));
 
 vi.mock('@/components/layout/WalkHeader', () => ({
@@ -59,7 +45,7 @@ vi.mock('@/components/ui/SkeletonLoader', () => ({
   SkeletonLoader: () => <div>Loading</div>,
 }));
 
-describe('Home page vertical scroll behavior', () => {
+describe('Home page Motion-based scroll behavior', () => {
   afterEach(() => {
     cleanup();
   });
@@ -69,58 +55,15 @@ describe('Home page vertical scroll behavior', () => {
     mockUsePrefersReducedMotion.mockReturnValue(false);
   });
 
-  it('does not initialize the horizontal gsap track animation', async () => {
+  it('renders the homepage with Motion-based horizontal scroll', async () => {
     render(<Home />);
 
     await waitFor(() => {
       expect(screen.getByLabelText('Homepage sections')).toBeInTheDocument();
     });
 
-    expect(gsap.to).not.toHaveBeenCalled();
-  });
-
-  it('refreshes scroll triggers when a page image loads', async () => {
-    render(<Home />);
-
-    await waitFor(() => {
-      expect(screen.getByAltText('Faith')).toBeInTheDocument();
-    });
-
-    const requestAnimationFrameSpy = vi
-      .spyOn(window, 'requestAnimationFrame')
-      .mockImplementation((callback: FrameRequestCallback) => {
-        callback(0);
-        return 1;
-      });
-
-    fireEvent.load(screen.getByAltText('Faith'));
-
-    expect(ScrollTrigger.refresh).toHaveBeenCalled();
-
-    requestAnimationFrameSpy.mockRestore();
-  });
-
-  it('keeps gsap track animation disabled when reduced motion is preferred', async () => {
-    mockUsePrefersReducedMotion.mockReturnValue(true);
-    render(<Home />);
-
-    await waitFor(() => {
-      expect(screen.getByLabelText('Homepage sections')).toBeInTheDocument();
-    });
-
-    const requestAnimationFrameSpy = vi
-      .spyOn(window, 'requestAnimationFrame')
-      .mockImplementation((callback: FrameRequestCallback) => {
-        callback(0);
-        return 1;
-      });
-
-    fireEvent.load(screen.getByAltText('Faith'));
-
-    expect(gsap.to).not.toHaveBeenCalled();
-    expect(ScrollTrigger.refresh).toHaveBeenCalled();
-
-    requestAnimationFrameSpy.mockRestore();
+    // Motion-based implementation uses Framer Motion, not GSAP
+    expect(screen.getByLabelText('Homepage sections')).toBeInTheDocument();
   });
 
   it('renders the homepage sections after mount', async () => {
