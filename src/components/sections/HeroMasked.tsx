@@ -1,13 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { gsap } from '@/lib/gsap-config';
-
-declare global {
-  interface WindowEventMap {
-    'horizontal-scroll-hero': CustomEvent<{ progress: number }>;
-  }
-}
+import { useRef } from 'react';
+import { motion, MotionValue, useTransform } from 'framer-motion';
 
 /**
  * Walker "WE BELIEVE" Hero Section — Masking Engine (SOP-001).
@@ -20,65 +14,42 @@ declare global {
  * Implementation: SVG mask on a white rectangle overlaid on the background.
  * The mask exposes the video only where the text letter shapes are.
  *
- * IMPORTANT: This component is used INSIDE HomepageHorizontalScroll which already
- * has a ScrollTrigger with pin: true. We cannot have a nested pin — it silently fails.
- * SOLUTION: Instead of a separate ScrollTrigger, we use a progress-based animation
- * driven by a custom event dispatched from the parent's horizontal scroll handler.
- * The animation fires when horizontal-scroll-hero fires (first ~12% of horizontal travel).
+ * Uses Framer Motion's useTransform to map scroll progress to animation values.
  */
-export function HeroMasked({ heroImage = '/images/videocover2-812-optimized.webp' }: { heroImage?: string }) {
+export function HeroMasked({
+  heroImage = '/images/videocover2-812-optimized.webp',
+  scrollYProgress
+}: {
+  heroImage?: string;
+  scrollYProgress?: MotionValue<number>;
+}) {
   const maskGroupRef = useRef<SVGGElement>(null);
   const wallRef = useRef<SVGRectElement>(null);
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const hasAnimatedRef = useRef(false);
+  const missionRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
+  // Hero animates during first 18% of scroll
+  const heroProgressEnd = 0.18;
 
-    const heroTl = gsap.timeline({ paused: true });
+  const maskScale = useTransform(
+    scrollYProgress || new MotionValue(0),
+    [0, heroProgressEnd],
+    [60, 1]
+  );
 
-    // Zoom "WE BELIEVE" from enormous (scale 60x) down to readable (scale 1x)
-    // The wall fades from white to dark as the text zooms out
-    heroTl
-      .fromTo(
-        maskGroupRef.current,
-        { scale: 60, transformOrigin: '50% 50%' },
-        { scale: 1, ease: 'power2.out', duration: 1 }
-      )
-      .to(
-        wallRef.current,
-        { fill: 'rgba(0,0,0,0.55)', ease: 'power1.in', duration: 1 },
-        0
-      );
+  const wallOpacity = useTransform(
+    scrollYProgress || new MotionValue(0),
+    [0, heroProgressEnd * 0.62, heroProgressEnd],
+    [0, 0.68, 0]
+  );
 
-    const handleHeroScroll = (e: WindowEventMap['horizontal-scroll-hero']) => {
-      if (hasAnimatedRef.current) return;
-
-      const progress = e.detail.progress;
-
-      // Fire animation during first ~12% of horizontal scroll
-      // Progress 0 → 0.12 maps to animation 0 → 1
-      if (progress <= 0.12) {
-        const t = progress / 0.12;
-        heroTl.progress(t);
-
-        if (progress >= 0.12) {
-          hasAnimatedRef.current = true;
-        }
-      }
-    };
-
-    window.addEventListener('horizontal-scroll-hero', handleHeroScroll);
-
-    return () => {
-      window.removeEventListener('horizontal-scroll-hero', handleHeroScroll);
-      heroTl.kill();
-    };
-  }, []);
+  const missionOpacity = useTransform(
+    scrollYProgress || new MotionValue(0),
+    [0, heroProgressEnd * 0.72, heroProgressEnd],
+    [0, 0, 1]
+  );
 
   return (
     <section
-      ref={sectionRef}
       style={{
         position: 'relative',
         width: '100vw',
@@ -123,7 +94,13 @@ export function HeroMasked({ heroImage = '/images/videocover2-812-optimized.webp
             <rect width="100" height="100" fill="white" />
 
             {/* Step 2: Text in BLACK cuts holes in the mask */}
-            <g ref={maskGroupRef}>
+            <motion.g
+              ref={maskGroupRef}
+              style={{
+                scale: maskScale,
+                transformOrigin: '50% 50%'
+              }}
+            >
               <text
                 x="50"
                 y="54"
@@ -141,31 +118,36 @@ export function HeroMasked({ heroImage = '/images/videocover2-812-optimized.webp
               >
                 We Believe
               </text>
-            </g>
+            </motion.g>
           </mask>
         </defs>
 
         {/* Step 3: White wall rectangle masked by the text mask
             The masked rect only shows where the mask is white (inside letters).
             So only the letter shapes reveal the background video. */}
-        <rect
+        <motion.rect
           ref={wallRef}
           width="100"
           height="100"
           fill="rgba(255,255,255,1)"
           mask="url(#hero-text-mask)"
+          style={{ opacity: wallOpacity }}
         />
       </svg>
 
       {/* ── 3. Mission Block — bottom-left, clamp-based breathing room ─── */}
-      <div className="hero-mission-block hero-mission-safe-bottom" style={{ zIndex: 2, maxWidth: 380 }}>
+      <motion.div
+        ref={missionRef}
+        className="hero-mission-block hero-mission-safe-bottom"
+        style={{ zIndex: 2, maxWidth: 380, opacity: missionOpacity }}
+      >
         <p className="text-overline" style={{ marginBottom: 10 }}>
           St. Elizabeth High School
         </p>
         <p className="text-body-lg" style={{ maxWidth: 320, color: 'rgba(255,255,255,0.85)' }}>
           Nurturing minds, hearts, and spirits through faith, excellence, and service since 1967.
         </p>
-      </div>
+      </motion.div>
     </section>
   );
 }

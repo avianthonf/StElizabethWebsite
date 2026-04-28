@@ -1,23 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { gsap, ScrollTrigger } from '@/lib/gsap-config';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { useMotionHorizontalScroll } from '@/lib/hooks/useMotionHorizontalScroll';
 import { HeroMasked } from "@/components/sections/HeroMasked";
 import { StickySplitSection } from "@/components/sections/StickySplitSection";
 import { WalkHeader } from "@/components/layout/WalkHeader";
 import { SkeletonLoader } from "@/components/ui/SkeletonLoader";
-
-// Debounce utility for resize handler
-function debounce<T extends (...args: any[]) => void>(
-  func: T,
-  wait: number
-): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout | null = null;
-  return (...args: Parameters<T>) => {
-    if (timeout) clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-}
 
 // PLACEHOLDER: Using Walker School images until St. Elizabeth photos provided
 const IMAGES = {
@@ -383,76 +372,13 @@ function DivisionsTabsHorizontal({ divisions }: { divisions: DivisionItem[] }) {
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
+  const { containerRef, trackRef, x, scrollYProgress } = useMotionHorizontalScroll();
 
   useEffect(() => {
-    setMounted(true);
+    queueMicrotask(() => {
+      setMounted(true);
+    });
   }, []);
-
-  // Full-page horizontal scroll setup
-  useEffect(() => {
-    if (!mounted || !scrollContainerRef.current || !trackRef.current) return;
-
-    const ctx = gsap.context(() => {
-      const track = trackRef.current!;
-      const container = scrollContainerRef.current!;
-
-      const totalWidth = track.scrollWidth;
-      const viewportWidth = window.innerWidth;
-      const travelDistance = totalWidth - viewportWidth;
-
-      // The scroll distance is horizontal pixels, so the container height must
-      // also be set in pixels. Using `vh` here under-allocates scroll space on
-      // wide screens (e.g. 1920×1080), which makes later sections unreachable
-      // and leaves you staring at the white background of the current section.
-      container.style.height = `${travelDistance + window.innerHeight}px`;
-
-      // Keep one viewport of extra space so the pin can fully release cleanly.
-      container.style.minHeight = `${travelDistance + window.innerHeight * 2}px`;
-
-      // Create horizontal scroll animation
-      // scrub: 1.2 = 1.2s lag behind scroll = "heavy premium feel"
-      gsap.to(track, {
-        x: -travelDistance,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: container,
-          start: 'top top',
-          end: () => `+=${travelDistance}`,
-          scrub: 1.2,
-          pin: true,
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
-          // Dispatch progress events for child section animations
-          onUpdate: (self) => {
-            const progress = self.progress;
-
-            // Hero section occupies ~12% of horizontal travel (1 of 9 sections)
-            window.dispatchEvent(new CustomEvent('horizontal-scroll-progress', {
-              detail: { progress },
-            }));
-
-            window.dispatchEvent(new CustomEvent('horizontal-scroll-hero', {
-              detail: { progress },
-            }));
-          },
-        },
-      });
-    }, scrollContainerRef);
-
-    // Handle resize
-    const handleResize = debounce(() => {
-      ScrollTrigger.refresh();
-    }, 200);
-
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      ctx.revert();
-    };
-  }, [mounted]);
 
   if (!mounted) {
     return (
@@ -469,34 +395,37 @@ export default function Home() {
     <>
       <WalkHeader />
 
-      {/* Full-page horizontal scroll container — height set dynamically by GSAP useEffect */}
-      <div
-        ref={scrollContainerRef}
-        style={{ minHeight: '900vh', position: 'relative' }}
-        aria-label="Homepage sections"
-      >
-        {/* Sticky track that moves horizontally */}
-        <div
-          ref={trackRef}
-          style={{
-            position: 'sticky',
-            top: 0,
-            height: '100vh',
-            display: 'flex',
-            overflow: 'hidden',
-            willChange: 'transform',
-          }}
-        >
-          {/* SECTION 1: Hero */}
-          <div style={{ minWidth: '100vw', height: '100vh', flexShrink: 0, overflow: 'hidden' }}>
-            <HeroMasked heroImage={IMAGES.heroCampus} />
-          </div>
+      {/* Tall container creates scroll space (400vh = 4x viewport) */}
+      <div ref={containerRef} style={{ height: '400vh' }}>
+        {/* Sticky wrapper pins the viewport during scroll */}
+        <div style={{
+          position: 'sticky',
+          top: 0,
+          height: '100vh',
+          overflow: 'hidden'
+        }}>
+          {/* Track slides horizontally via Motion's x transform */}
+          <motion.div
+            ref={trackRef}
+            style={{
+              x,
+              display: 'flex',
+              height: '100vh',
+              willChange: 'transform'
+            }}
+            aria-label="Homepage sections"
+          >
+            {/* SECTION 1: Hero */}
+            <div style={{ minWidth: '100vw', height: '100vh', flexShrink: 0, overflow: 'hidden' }}>
+              <HeroMasked heroImage={IMAGES.heroCampus} scrollYProgress={scrollYProgress} />
+            </div>
 
           {/* SECTION 2: We Value */}
           <div
             style={{
               minWidth: '100vw',
               minHeight: '100vh',
+              flexShrink: 0,
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
@@ -533,33 +462,37 @@ export default function Home() {
           </div>
 
           {/* SECTION 3: Accolades */}
-          <StickySplitSection
-            overline="Recognized for Excellence"
-            heading="A Legacy of Faith and Learning"
-            body="For over five decades, St. Elizabeth High School has been a pillar of Catholic education in Goa. Our students excel academically, grow spiritually, and serve their community with distinction."
-            accordion={[
-              { title: "Academic Achievement", content: "Our students consistently achieve top results in SSC and HSC examinations, with many gaining admission to India's premier universities and colleges." },
-              { title: "Faith Formation", content: "Daily prayer, regular Mass, retreats, and service projects form the spiritual foundation of our school community." },
-              { title: "Community Impact", content: "Through service learning and outreach programs, our students make a tangible difference in Pomburpa and surrounding communities." },
-            ]}
-            leftImage={IMAGES.studentPortrait}
-            rightImages={[IMAGES.gallery1, IMAGES.gallery2, IMAGES.gallery3, IMAGES.gallery4]}
-            backgroundColor="white"
-          />
+          <div style={{ minWidth: '100vw', flexShrink: 0 }}>
+            <StickySplitSection
+              overline="Recognized for Excellence"
+              heading="A Legacy of Faith and Learning"
+              body="For over five decades, St. Elizabeth High School has been a pillar of Catholic education in Goa. Our students excel academically, grow spiritually, and serve their community with distinction."
+              accordion={[
+                { title: "Academic Achievement", content: "Our students consistently achieve top results in SSC and HSC examinations, with many gaining admission to India's premier universities and colleges." },
+                { title: "Faith Formation", content: "Daily prayer, regular Mass, retreats, and service projects form the spiritual foundation of our school community." },
+                { title: "Community Impact", content: "Through service learning and outreach programs, our students make a tangible difference in Pomburpa and surrounding communities." },
+              ]}
+              leftImage={IMAGES.studentPortrait}
+              rightImages={[IMAGES.gallery1, IMAGES.gallery2, IMAGES.gallery3, IMAGES.gallery4]}
+              backgroundColor="white"
+            />
+          </div>
 
           {/* SECTION 4: Mission */}
-          <StickySplitSection
-            overline="Our Purpose"
-            heading="Mission & Vision"
-            body="St. Elizabeth High School exists to form young men and women of faith, character, and academic excellence. Rooted in Catholic values and inspired by the example of St. Elizabeth, we prepare students to lead lives of purpose, service, and integrity."
-            accordion={[
-              { title: "Our History", content: "Founded in the heart of Goa, St. Elizabeth High School has served generations of families in Pomburpa and throughout the region." },
-              { title: "Our Catholic Identity", content: "As a Catholic school, we integrate faith into every aspect of learning. Daily prayer, religious education, sacramental preparation, and service to others form the heart of the St. Elizabeth experience." },
-              { title: "Our Vision", content: "We envision graduates who are intellectually curious, spiritually grounded, and committed to serving others." },
-            ]}
-            rightImages={[IMAGES.mission1, IMAGES.mission2, IMAGES.mission3, IMAGES.mission4]}
-            backgroundColor="light"
-          />
+          <div style={{ minWidth: '100vw', flexShrink: 0 }}>
+            <StickySplitSection
+              overline="Our Purpose"
+              heading="Mission & Vision"
+              body="St. Elizabeth High School exists to form young men and women of faith, character, and academic excellence. Rooted in Catholic values and inspired by the example of St. Elizabeth, we prepare students to lead lives of purpose, service, and integrity."
+              accordion={[
+                { title: "Our History", content: "Founded in the heart of Goa, St. Elizabeth High School has served generations of families in Pomburpa and throughout the region." },
+                { title: "Our Catholic Identity", content: "As a Catholic school, we integrate faith into every aspect of learning. Daily prayer, religious education, sacramental preparation, and service to others form the heart of the St. Elizabeth experience." },
+                { title: "Our Vision", content: "We envision graduates who are intellectually curious, spiritually grounded, and committed to serving others." },
+              ]}
+              rightImages={[IMAGES.mission1, IMAGES.mission2, IMAGES.mission3, IMAGES.mission4]}
+              backgroundColor="light"
+            />
+          </div>
 
           {/* SECTION 5: Athletics */}
           <PassionsPanel
@@ -595,7 +528,9 @@ export default function Home() {
           />
 
           {/* SECTION 8: Divisions Tabs */}
-          <DivisionsTabsHorizontal divisions={divisions} />
+          <div style={{ minWidth: '100vw', flexShrink: 0 }}>
+            <DivisionsTabsHorizontal divisions={divisions} />
+          </div>
 
           {/* SECTION 9: Footer CTA */}
           <div
@@ -679,6 +614,7 @@ export default function Home() {
               </a>
             </div>
           </div>
+          </motion.div>
         </div>
       </div>
     </>
