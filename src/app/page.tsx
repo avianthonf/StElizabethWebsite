@@ -370,26 +370,8 @@ function DivisionsTabsHorizontal({ divisions }: { divisions: DivisionItem[] }) {
   );
 }
 
-export default function Home() {
-  const [mounted, setMounted] = useState(false);
+function HomeHorizontalScroll() {
   const { containerRef, trackRef, x, scrollYProgress } = useMotionHorizontalScroll();
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      setMounted(true);
-    });
-  }, []);
-
-  if (!mounted) {
-    return (
-      <>
-        <WalkHeader />
-        <main>
-          <SkeletonLoader variant="section" />
-        </main>
-      </>
-    );
-  }
 
   return (
     <>
@@ -619,4 +601,27 @@ export default function Home() {
       </div>
     </>
   );
+}
+
+export default function Home() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      setMounted(true);
+    });
+  }, []);
+
+  if (!mounted) {
+    return (
+      <>
+        <WalkHeader />
+        <main>
+          <SkeletonLoader variant="section" />
+        </main>
+      </>
+    );
+  }
+
+  return <HomeHorizontalScroll />;
 }

@@ -11,9 +11,7 @@ export function useMotionHorizontalScroll() {
   // Track scroll progress through the tall container
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ["start start", "end end"],
-    // Disable scroll tracking during SSR/hydration
-    layoutEffect: false
+    offset: ['start start', 'end end'],
   });
 
   // Map scroll progress to horizontal translation
