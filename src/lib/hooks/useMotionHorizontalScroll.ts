@@ -1,23 +1,19 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { useScroll, useTransform, useSpring, MotionValue } from 'framer-motion';
+import { useScroll, useTransform, useSpring } from 'framer-motion';
 
 export function useMotionHorizontalScroll() {
   const containerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const [travelDistance, setTravelDistance] = useState(0);
-  const [isMounted, setIsMounted] = useState(false);
-
-  // Wait for hydration before attaching scroll listener
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   // Track scroll progress through the tall container
   const { scrollYProgress } = useScroll({
-    target: isMounted ? containerRef : undefined,
-    offset: ["start start", "end end"]
+    target: containerRef,
+    offset: ["start start", "end end"],
+    // Disable scroll tracking during SSR/hydration
+    layoutEffect: false
   });
 
   // Map scroll progress to horizontal translation
