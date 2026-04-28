@@ -34,7 +34,7 @@ export default function AthleticsPage() {
           }}
         >
           <p style={{ marginBottom: 24 }}>
-            At St. Elizabeth High School, athletics is more than winning games — it's about forming
+            At St. Elizabeth High School, athletics is more than winning games — it&apos;s about forming
             character, building discipline, and learning the values of teamwork, perseverance, and
             sportsmanship. Our athletic program challenges students to push their limits while
             maintaining integrity and respect for opponents.

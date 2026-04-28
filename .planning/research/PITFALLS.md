@@ -1,422 +1,723 @@
-# Domain Pitfalls
+# Domain Pitfalls: Walker Fidelity Clone Project
 
-**Domain:** School/Education Marketing Websites (Static Next.js)
-**Researched:** 2026-04-27
-**Confidence:** HIGH
-
-## Critical Pitfalls
-
-### Pitfall 1: Accessibility Compliance Failures Leading to Legal Action
-
-**What goes wrong:**
-School websites fail WCAG 2.1 AA compliance, resulting in OCR (Office for Civil Rights) complaints, lawsuits, and mandatory remediation. Common violations: missing alt text, keyboard traps in mobile menus, insufficient color contrast, unlabeled form fields, missing captions on videos, and inaccessible PDF documents.
-
-**Why it happens:**
-- Developers treat accessibility as "nice to have" rather than legal requirement
-- Static export sites skip automated accessibility testing in CI/CD
-- Design systems prioritize aesthetics over keyboard navigation
-- Third-party components (video players, carousels) lack accessibility features
-- No accessibility audit before launch
-
-**How to avoid:**
-1. **Mandatory WCAG 2.1 AA compliance from Phase 1** - not a "Phase 5 polish" item
-2. Use `eslint-plugin-jsx-a11y` and fix all errors before commit
-3. Add automated accessibility tests with `@axe-core/react` or `jest-axe`
-4. Test with keyboard navigation only (no mouse) - all interactive elements must be reachable
-5. Run Lighthouse accessibility audits in CI/CD - fail build if score < 95
-6. Provide captions/transcripts for all video content (legal requirement, not optional)
-7. Ensure color contrast meets 4.5:1 minimum for body text, 3:1 for large text
-8. Test with screen readers (NVDA on Windows, VoiceOver on Mac/iOS)
-
-**Warning signs:**
-- Mobile menu can't be closed with keyboard
-- Form validation errors not announced to screen readers
-- Focus indicator invisible or removed with CSS
-- Images missing alt attributes
-- Videos auto-play without controls
-- Dropdown menus require mouse hover (no keyboard access)
-
-**Phase to address:**
-Phase 1 (Foundation) - Build accessibility into component library from start. Phase 2 (Forms) - Ensure form accessibility before launch. Phase 3 (Content) - Audit all multimedia for captions/transcripts.
+**Domain:** Premium school marketing site — static-export clone of The Walker School
+**Researched:** 2026-04-28
+**Confidence:** HIGH — Derived from codebase audit (CONCERNS.md), GSAP/ScrollTrigger community knowledge, and browser compatibility research
 
 ---
 
-### Pitfall 2: GSAP ScrollTrigger Performance Disasters
+## Executive Summary
 
-**What goes wrong:**
-GSAP animations cause layout thrashing, jank, and poor Core Web Vitals scores. Symptoms: scroll feels laggy, animations stutter, mobile devices overheat, Lighthouse performance score drops below 50. Known issues in this project: plugin double-registration, no resize handler, iOS Safari scroll lock.
+Cloning Walker's animation-heavy site into a static Next.js export introduces a specific class of failure modes distinct from generic web development:
 
-**Why it happens:**
-- Reading layout properties (offsetHeight, getBoundingClientRect) inside animation loops triggers forced reflows
-- Creating ScrollTriggers out of order causes incorrect position calculations
-- Animating pinned elements directly instead of children breaks measurements
-- Ancestor transforms break `position: fixed` behavior
-- No cleanup on component unmount causes memory leaks
-- Resize events not handled - animations break on viewport changes
+1. **Scroll-jacking fragility** — Horizontal scroll-jacking breaks with late-loading images, Safari mobile quirks, and container height miscalculation
+2. **GSAP initialization errors** — StrictMode double-init, SSR hydration mismatches, nested pin conflicts
+3. **Fidelity drift** — Small deviations from Walker visual spec compound into "clone that doesn't feel like Walker"
+4. **Static export constraints** — No server-side form handling, limited image optimization, all content baked at build
+5. **Performance regression creep** — CLS from images, frame drops from scroll listeners, bundle bloat
 
-**How to avoid:**
-1. **Create ScrollTriggers in DOM order** (top-to-bottom) - never create lower triggers before upper pinning triggers
-2. **Animate children of pinned elements**, never the pinned element itself
-3. **Avoid ancestor transforms** - use `pinReparent: true` only as last resort (expensive)
-4. **Batch DOM reads** - use GSAP's `getProperty()` instead of direct DOM access
-5. **Add resize handlers** with debounce (200ms) to recalculate ScrollTrigger positions
-6. **Clean up on unmount** - call `ScrollTrigger.getAll().forEach(t => t.kill())` in useEffect cleanup
-7. **Use `will-change` sparingly** - only on actively animating elements, remove after animation
-8. **Test on low-end mobile devices** - animations smooth on desktop often jank on mobile
-9. **Implement singleton pattern** for plugin registration to prevent double-registration warnings
-
-**Warning signs:**
-- Console warnings: "ScrollTrigger.refresh() should be called after all ScrollTriggers have been created"
-- Scroll feels "sticky" or delayed
-- Animations jump or snap instead of smooth transitions
-- Mobile devices get hot during scrolling
-- Lighthouse performance score < 70
-- Layout Shift (CLS) > 0.1
-
-**Phase to address:**
-Phase 1 (Foundation) - Fix GSAP configuration and resize handlers. Phase 3 (Polish) - Optimize animations, add performance monitoring.
+The most critical items are **project-blocking** before launch: Formspree endpoint configuration, real photography replacement, privacy policy creation.
 
 ---
 
-### Pitfall 3: Static Export Image Optimization Failure
+## Critical Pitfalls (Block Launch if Unresolved)
 
-**What goes wrong:**
-Next.js Image component optimization is disabled (`unoptimized: true`) for static export, causing massive image files (2-5MB PNGs), slow page loads, poor Core Web Vitals (LCP > 4s), and high bandwidth costs. Mobile users on slow connections abandon site before images load.
+### Pitfall 1: Horizontal Scroll Container Height Mis-Calculated → Unreachable Sections
 
-**Why it happens:**
-- Static export doesn't support Next.js automatic image optimization (requires server)
-- Developers use `<img>` tags instead of `<Image>` component
-- No lazy loading - all images load immediately, even below fold
-- No responsive images - serving desktop-size images to mobile
-- Missing width/height attributes cause Cumulative Layout Shift (CLS)
-- No modern formats (WebP, AVIF) - serving legacy JPG/PNG
+**Severity:** CRITICAL
+**What goes wrong:** Homepage horizontal scroll-jacking computes `container.style.height = ${travelDistance + window.innerHeight * 2}px` exactly once inside a `useEffect` on mount. If any section images finish loading *after* mount, `track.scrollWidth` increases, but `travelDistance` is already fixed in the GSAP `end` value. Result: user scrolls to end of horizontal track and hits a wall while Divisions Tabs and Footer CTA remain off-screen (unreachable whitespace).
 
-**How to avoid:**
-1. **Use Next.js `<Image>` component** with `unoptimized={false}` and external image optimization service (Cloudinary, Imgix)
-2. **OR implement build-time optimization** with `sharp` or `@next/image-loader` plugin
-3. **Add `loading="lazy"` to all below-fold images** - only hero images should be `priority`
-4. **Provide explicit width/height** to prevent CLS - use static imports for automatic dimensions
-5. **Serve WebP with JPG fallback** - 25-35% smaller file sizes
-6. **Implement responsive images** with `sizes` prop - don't serve 2000px images to 375px mobile screens
-7. **Compress images before commit** - use ImageOptim, Squoosh, or automated CI/CD compression
-8. **Set LCP budget** - fail build if hero image > 200KB
+**Root cause:** GSAP ScrollTrigger captures scroll extents at creation time; images loading later expand the track's intrinsic width but ScrollTrigger is unaware. `invalidateOnRefresh: true` only refreshes on explicit `ScrollTrigger.refresh()` calls, not automatic DOM mutations.
 
-**Warning signs:**
-- Lighthouse LCP (Largest Contentful Paint) > 2.5s
-- Network tab shows images > 500KB
-- CLS (Cumulative Layout Shift) > 0.1
-- Mobile page load > 5s on 3G
-- Images appear pixelated or blurry on high-DPI screens
+**Consequences:**
+- Last 2 homepage sections completely invisible to desktop users
+- Mobile experience similarly broken
+- Site appears incomplete/broken; users think "that's all?"
 
-**Phase to address:**
-Phase 1 (Foundation) - Implement image optimization pipeline. Phase 2 (Content) - Audit all images, add lazy loading.
+**Prevention:** Implement dual-mode refresh strategy in `src/app/page.tsx`:
 
----
+```typescript
+// 1. Wait for all section images to load before closing skeleton
+const imageLoadPromises = Array.from(document.images).map(img => {
+  if (img.complete) return Promise.resolve();
+  return new Promise(resolve => img.onload = resolve);
+});
+await Promise.all(imageLoadPromises);
 
-### Pitfall 4: Mobile Menu Accessibility and Usability Failures
+// 2. Attach ResizeObserver to trackRef before mounting GSAP
+const resizeObserver = new ResizeObserver(() => {
+  requestAnimationFrame(() => {
+    ScrollTrigger.refresh();
+    // Recompute container height from new track width
+    const travelDistance = trackRef.current!.scrollWidth - window.innerWidth;
+    scrollContainerRef.current!.style.height = `${travelDistance + window.innerHeight * 2}px`;
+  });
+});
+resizeObserver.observe(trackRef.current);
+```
 
-**What goes wrong:**
-Mobile navigation menus fail on iOS Safari (scroll lock issues), trap keyboard focus, lack proper ARIA attributes, and can't be closed with Escape key. Users get stuck in menu, can't access content, and abandon site. Known issue in this project: body scroll lock doesn't handle iOS Safari edge cases.
+**Detection:** Load page with DevTools throttling (Slow 3G). Verify scroll bar traverses all 9 sections without hitting end early. Check `container.style.height` equals `(track.scrollWidth - innerWidth) + (innerHeight × 2)` after all images visible.
 
-**Why it happens:**
-- Custom scroll lock implementations don't handle iOS Safari `-webkit-overflow-scrolling` quirks
-- Missing ARIA attributes (`aria-expanded`, `aria-controls`, `aria-label`)
-- Focus not trapped inside open menu - Tab key escapes to background content
-- No keyboard shortcuts (Escape to close, Arrow keys for navigation)
-- Hamburger icon not semantic button (uses `<div>` with click handler)
-- Menu state not announced to screen readers
-
-**How to avoid:**
-1. **Use battle-tested scroll lock library** - `body-scroll-lock` or `react-remove-scroll` handles iOS Safari
-2. **Implement focus trap** - use `focus-trap-react` to keep focus inside open menu
-3. **Add proper ARIA attributes**:
-   - `<button aria-expanded={isOpen} aria-controls="mobile-menu" aria-label="Toggle menu">`
-   - `<nav id="mobile-menu" aria-label="Main navigation">`
-4. **Support keyboard shortcuts**:
-   - Escape key closes menu
-   - Arrow keys navigate menu items
-   - Tab cycles through menu items only
-5. **Use semantic HTML** - `<button>` for toggle, `<nav>` for menu, `<ul><li>` for items
-6. **Test on real iOS devices** - Safari has unique bugs not present in Chrome DevTools mobile emulation
-7. **Announce state changes** - use `aria-live` region to announce "Menu opened" / "Menu closed"
-
-**Warning signs:**
-- Background content scrolls when menu is open (iOS Safari)
-- Tab key moves focus to background content
-- Escape key doesn't close menu
-- Screen reader doesn't announce menu state
-- Hamburger icon not focusable with keyboard
-- Menu items not reachable with keyboard navigation
-
-**Phase to address:**
-Phase 1 (Foundation) - Fix mobile menu accessibility and iOS Safari scroll lock before adding more pages.
+**Phase responsibility:** Phase 1 (Foundation) — must ship with this fix; current codebase lacks the `ResizeObserver` pattern and relies on single mount calculation.
 
 ---
 
-### Pitfall 5: Form Handling on Static Sites (Spam, Validation, GDPR)
+### Pitfall 2: Formspree Endpoint Placeholder → Zero Submissions
 
-**What goes wrong:**
-Static export sites have no server-side form handling, leading to spam submissions, poor validation UX, GDPR compliance failures, and data loss. Contact forms either don't work or send unvalidated data to third-party services without proper consent.
+**Severity:** CRITICAL
+**What goes wrong:** `src/app/contact/page.tsx` line 85 and `src/app/admissions/page.tsx` line 76 both contain:
 
-**Why it happens:**
-- No server-side validation - client-side validation easily bypassed
-- No spam protection - bots submit forms freely
-- Third-party form services (Formspree, Netlify Forms) lack GDPR consent flows
-- Form errors not accessible to screen readers
-- No loading states - users submit multiple times
-- Sensitive data sent over unencrypted connections
+```typescript
+const FORMSPREE_ENDPOINT = 'https://formspree.io/f/YOUR_FORM_ID_HERE';
+```
 
-**How to avoid:**
-1. **Use form service with spam protection** - Netlify Forms (honeypot + reCAPTCHA), Formspree, or custom API route
-2. **Implement GDPR-compliant consent**:
-   - Explicit checkbox for data processing consent (pre-checked = illegal)
-   - Link to privacy policy
-   - Store consent timestamp and IP address
-   - Provide data deletion mechanism
-3. **Add client-side validation with accessible errors**:
-   - Use `aria-invalid` and `aria-describedby` for error messages
-   - Show errors inline, not just on submit
-   - Announce errors to screen readers with `aria-live="polite"`
-4. **Implement COPPA compliance** for forms collecting data from children under 13:
-   - Require parental consent
-   - Don't collect more data than necessary
-   - Provide parental access to child's data
-5. **Add loading states** - disable submit button, show spinner, prevent double submission
-6. **Validate on both client and server** - never trust client-side validation alone
-7. **Use HTTPS** - enforce secure connections for all form submissions
+Submitting sends a POST to Formspree's generic endpoint, which returns HTTP 404 "Form not found." No error shown to user beyond generic fallback message, so user believes submission went through when it did not.
 
-**Warning signs:**
-- Form accepts obviously invalid data (email: "asdf")
-- No spam protection - receiving bot submissions
-- Form errors not announced to screen readers
-- No privacy policy or consent checkbox
-- Submit button doesn't disable during submission
-- Form data sent over HTTP (not HTTPS)
+**Root cause:** Phase 3-PLAN instructions tell user "you need to set up Formspree" but no one has done it.
 
-**Phase to address:**
-Phase 2 (Forms) - Implement accessible, GDPR-compliant contact form with spam protection before launch.
+**Consequences:**
+- Contact inquiries and admissions applications silently lost
+- Prospective families receive no confirmation email
+- Enrollment pipeline broken
+- School leadership unaware of submitted forms
+
+**Prevention:** Create a pre-launch checklist item "Formspree endpoint verification" with steps:
+1. Create Formspree account
+2. Create Contact form → copy form ID to `FORMSPREE_ENDPOINT`
+3. Create Admissions form → separate form ID
+4. Deploy to staging
+5. Use Playwright to fill + submit each form; assert HTTP 200 OK and "Thank you" message displayed
+
+**Detection:** Network tab shows `POST https://formspree.io/f/YOUR_FORM_ID_HERE 404 (Not Found)`. Formspree dashboard shows 0 submissions.
+
+**Phase responsibility:** Phase 2 (Content) — forms must be functional *after* content staging but *before* polish.
 
 ---
 
-### Pitfall 6: Font Loading and Cumulative Layout Shift (CLS)
+### Pitfall 3: Formspree Free Tier Exhaustion at 50 Submissions/Month
 
-**What goes wrong:**
-Custom fonts (Inter, Playfair Display, Montserrat) load after initial render, causing text to shift, reflow, and poor CLS scores. Users see "flash of unstyled text" (FOUT) or "flash of invisible text" (FOIT). Lighthouse penalizes CLS > 0.1.
+**Severity:** CRITICAL
+**What goes wrong:** Formspree free plan allows only 50 submissions per form per month. At 51st submission, Formspree returns HTTP 402 Payment Required and discards the payload. No warning to user until after submission fails.
 
-**Why it happens:**
-- Fonts loaded from Google Fonts or external CDN without preloading
-- No `font-display` strategy - browser defaults to FOIT (invisible text for 3s)
-- Font files not optimized - loading full character sets instead of subsets
-- No fallback fonts with similar metrics - layout shifts when custom font loads
-- CSS uses custom fonts before they're loaded
+**Root cause:** No monitoring of quota; no client-side submission counter; default plan assumed to be sufficient.
 
-**How to avoid:**
-1. **Self-host fonts** - don't rely on Google Fonts CDN (privacy + performance)
-2. **Use Next.js Font Optimization** with `next/font/google`:
-   ```tsx
-   import { Inter, Playfair_Display } from 'next/font/google'
-   const inter = Inter({ subsets: ['latin'], display: 'swap' })
-   ```
-3. **Set `font-display: swap`** - show fallback font immediately, swap when custom font loads
-4. **Preload critical fonts** in `<head>`:
-   ```html
-   <link rel="preload" href="/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
-   ```
-5. **Use font subsetting** - only include characters you need (Latin subset, no Cyrillic/Greek)
-6. **Match fallback font metrics** - use `size-adjust`, `ascent-override`, `descent-override` to minimize layout shift
-7. **Optimize font files** - use WOFF2 format (30% smaller than WOFF), remove unused glyphs
+**Consequences:**
+- Peak admissions season (Nov–Jan): forms go offline mid-cycle
+- Parents cannot apply, school misses leads
+- Emergency migration required mid-admissions
 
-**Warning signs:**
-- Text invisible for 1-3 seconds on page load
-- Text shifts/reflows when fonts load
-- CLS score > 0.1 in Lighthouse
-- Fonts loaded from external CDN (privacy issue in EU)
-- Multiple font weights loaded but not used
+**Prevention:** Upgrade to Formspree paid tier ($10–30/month) before launch (allows 1000+ submissions). Alternative backup: parallel Zapier → Google Forms sink, and error message "If this fails, email admissions@st-elizabeth.edu directly."
 
-**Phase to address:**
-Phase 1 (Foundation) - Implement font optimization before building components. Phase 3 (Polish) - Audit font usage, remove unused weights.
+**Detection:** Check Formspree dashboard monthly; set up webhook to Slack when 80% threshold reached.
+
+**Phase responsibility:** Phase 2 (Content) — before forms go live, subscription must be active.
 
 ---
 
-### Pitfall 7: SEO Failures Specific to School Websites
+### Pitfall 4: SVG Text Mask Blur on High-DPI + Zoom
 
-**What goes wrong:**
-School websites miss critical SEO opportunities: no structured data (Schema.org EducationalOrganization), duplicate content across campus pages, missing local SEO signals, poor meta descriptions, and no sitemap. Result: low search rankings, prospective parents can't find school.
+**Severity:** CRITICAL
+**What goes wrong:** The HeroMasked SVG uses `<text fontSize="13.5">` inside a `<mask>`. On Retina displays (MacBook Pro, iPhone) and at browser zoom levels 125%–200%, the mask edges become noticeably blurry due to subpixel anti-aliasing limitations of SVG text rendering in masks.
 
-**Why it happens:**
-- Developers don't implement Schema.org markup for educational institutions
-- Multiple campus pages have identical content (copy-paste)
-- No Google My Business integration
-- Missing local keywords (city, neighborhood, "near me")
-- No blog or news section for fresh content
-- Static export sites skip dynamic sitemap generation
+**Root cause:** SVG text inside a mask doesn't get the same subpixel rendering as normal DOM text; fractional font sizes round unevenly per browser; mask application doubles the rasterization pass.
 
-**How to avoid:**
-1. **Implement Schema.org EducationalOrganization markup**:
-   ```json
-   {
-     "@context": "https://schema.org",
-     "@type": "EducationalOrganization",
-     "name": "St. Elizabeth High School Pomburpa",
-     "address": { "@type": "PostalAddress", "addressLocality": "Pomburpa", "addressRegion": "Goa" },
-     "telephone": "+91-...",
-     "url": "https://stelizabethpomburpa.edu",
-     "sameAs": ["https://facebook.com/...", "https://instagram.com/..."]
-   }
-   ```
-2. **Add local SEO signals**:
-   - Include city/region in title tags and H1s
-   - Create location-specific pages (not duplicate content)
-   - Embed Google Maps with school location
-   - List in local directories (Google My Business, Bing Places)
-3. **Generate static sitemap** at build time with `next-sitemap`
-4. **Write unique meta descriptions** for each page (150-160 characters)
-5. **Implement Open Graph tags** for social sharing
-6. **Add FAQ schema** for common admissions questions
-7. **Create blog/news section** for fresh content (Google favors recently updated sites)
+**Consequences:** Hero headline "WE BELIEVE" looks fuzzy, not crisp — breaks the premium visual standard. Walker reference has razor-sharp mask text; clone falls short.
 
-**Warning signs:**
-- School doesn't appear in "schools near me" searches
-- Google Search Console shows "Missing structured data" warnings
-- Multiple pages have identical meta descriptions
-- No sitemap.xml file
-- Social media shares show generic preview (no Open Graph tags)
+**Prevention:** Two viable paths:
 
-**Phase to address:**
-Phase 1 (Foundation) - Add structured data and meta tags. Phase 4 (Content) - Create unique content for each page, add blog section.
+**Path A: Pre-rendered PNG mask with CSS mask-image** (crisp, no animation)
+- Export SVG text as 2× PNG with alpha channel
+- Apply via `mask-image: url('/images/hero-mask@2x.png') mask-size: cover`
+- Animate opacity of two overlapping divs instead of SVG scale
+- Lose text-scale animation but gain sharpness
+
+**Path B: SVG text with `shape-rendering="geometricPrecision"` + integer font size** (best effort)
+```svg
+<text
+  fontSize="14"
+  style={{ shapeRendering: 'geometricPrecision', textRendering: 'optimizeSpeed' }}
+>
+```
+Test across Chrome, Safari, Firefox at 100%, 125%, 150%, 200%, 300% zoom. Accept minor blur but ensure no pixelation.
+
+**Detection:** Open on MacBook Pro Retina; zoom to 150%; inspect text edges at 4× zoom in DevTools. Compare against Walker side-by-side.
+
+**Phase responsibility:** Phase 1 (Foundation) — must decide Path A vs B and implement before interior page work begins.
 
 ---
 
-## Technical Debt Patterns
+### Pitfall 5: iOS Safari Scroll-Jacking Glitch
 
-Shortcuts that seem reasonable but create long-term problems.
+**Severity:** CRITICAL
+**What goes wrong:** On iOS Safari 14–16, GSAP horizontal scroll-jacking with `pin: true` + `scrub: 1.2` exhibits known bug: when user swipes vertically *past* the pin point to scroll forward, the pin fails to release and the page appears dead (no scroll possible). Recovery requires swiping in exact opposite direction 2–3 times.
 
-| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
-|----------|-------------------|----------------|-----------------|
-| Disable Next.js image optimization (`unoptimized: true`) | Static export works immediately | Poor performance, high bandwidth costs, bad Core Web Vitals | Never - implement build-time optimization instead |
-| Skip accessibility testing | Faster development | Legal liability, OCR complaints, expensive remediation | Never - accessibility is legal requirement for schools |
-| Hardcode content in TypeScript files | No CMS setup needed | Non-technical staff can't update content, requires developer for every change | MVP only - migrate to CMS or JSON files by Phase 2 |
-| Use `<img>` instead of `<Image>` | Simpler syntax | No lazy loading, no responsive images, CLS issues | Never - Next.js Image component is essential |
-| Skip GSAP cleanup on unmount | Animations work initially | Memory leaks, performance degradation, crashes on navigation | Never - always clean up ScrollTriggers |
-| Client-side form validation only | No backend needed | Spam, invalid data, security vulnerabilities | Never - always validate server-side |
-| Load all fonts/weights | Design flexibility | Slow page loads, poor performance | Never - only load weights actually used |
-| Auto-play videos without controls | Engaging hero section | Accessibility violation, poor UX, legal risk | Never - provide controls and captions |
+**Root cause:** iOS's momentum scrolling (`-webkit-overflow-scrolling: touch`) conflicts with GSAP's position pinning. GSAP attempts to hijack scroll offset but Safari's native scroll physics override. Workaround is `pinType: 'fixed'` instead of `'transform'`.
 
-## Integration Gotchas
+**Consequences:** iPhone/iPad users cannot navigate homepage; site appears broken on Apple mobile (significant user base for private school parents).
 
-Common mistakes when connecting to external services.
+**Prevention:** In all `ScrollTrigger.create()` calls with `pin: true`, add `pinType: 'fixed'`:
 
-| Integration | Common Mistake | Correct Approach |
-|-------------|----------------|------------------|
-| Google Fonts | Loading from CDN without preload | Self-host with `next/font/google`, preload critical fonts |
-| Form services (Netlify Forms, Formspree) | No GDPR consent flow | Add explicit consent checkbox, link to privacy policy |
-| Analytics (Google Analytics, Plausible) | Loading synchronously in `<head>` | Load asynchronously with `next/script` strategy="afterInteractive" |
-| Video embeds (YouTube, Vimeo) | Embedding full player on page load | Use facade/thumbnail, load player on click (saves 500KB+) |
-| GSAP plugins | Registering on every component import | Singleton pattern or register once in _app.tsx |
-| Accessibility testing (axe-core) | Running only in development | Add to CI/CD, fail build on violations |
+```typescript
+ScrollTrigger.create({
+  pin: true,
+  pinType: 'fixed',  // ← Safari workaround
+  scrub: 1.2,
+  // ...
+});
+```
 
-## Performance Traps
+Additionally, add CSS `overscroll-behavior-x: contain` to horizontally scrolling track to prevent overscroll from "rubber-banding" the body.
 
-Patterns that work at small scale but fail as usage grows.
+**Detection:** Physical iPhone or iOS Simulator; attempt to swipe through all 9 sections; observe if any swipe gets "stuck."
 
-| Trap | Symptoms | Prevention | When It Breaks |
-|------|----------|------------|----------------|
-| Loading all images eagerly | Slow initial page load, high bandwidth | Lazy load below-fold images, use `priority` only for LCP image | > 10 images per page |
-| GSAP animations on every scroll event | Jank, laggy scroll, poor FPS | Use ScrollTrigger's built-in debouncing, batch DOM reads | > 3 scroll animations |
-| Large CSS file loaded globally | Slow first paint, unused CSS | Split into component CSS modules, use Tailwind JIT | > 500 lines of CSS |
-| Unoptimized fonts (full character sets) | Slow font loading, FOIT/FOUT | Use font subsetting (Latin only), WOFF2 format | > 2 font families or > 4 weights |
-| No code splitting for GSAP | Large initial bundle | Lazy load GSAP only on pages with animations | GSAP used on < 50% of pages |
-| Synchronous third-party scripts | Blocking render, slow TTI | Use `next/script` with `strategy="afterInteractive"` or `lazyOnload` | > 2 third-party scripts |
+**Phase responsibility:** Phase 1 (Foundation) — fix before HeroMasked is touch-tested; must be in baseline for cross-browser QA.
 
-## Security Mistakes
+---
 
-Domain-specific security issues beyond general web security.
+### Pitfall 6: Z-Index War Between Header, Mobile Menu, and Future Modals
 
-| Mistake | Risk | Prevention |
-|---------|------|------------|
-| Collecting student data without COPPA compliance | FTC fines ($50,000+ per violation), lawsuits | Require parental consent for children under 13, minimize data collection |
-| No GDPR consent for EU students | GDPR fines (up to 4% of revenue), legal action | Add explicit consent checkbox, provide data deletion mechanism |
-| Embedding third-party content without CSP | XSS attacks, malicious scripts | Configure Content Security Policy, whitelist trusted domains |
-| Storing form submissions in client-side localStorage | Data leaks, privacy violations | Send to server immediately, never store sensitive data client-side |
-| Missing security headers on static hosting | Clickjacking, MIME sniffing attacks | Configure headers in hosting provider (Vercel, Netlify) |
-| Auto-playing videos with audio | Accessibility violation, poor UX | Require user interaction to play, provide controls |
+**Severity:** CRITICAL
+**What goes wrong:** `WalkHeader` uses `z-[9999]` and mobile overlay uses `z-10000`. No central z-index scale. Adding a modal later with `z-50` (standard Bootstrap/AntD) causes modal to render behind mobile menu. Header dropdown shadows get clipped by body `overflow-x: hidden`.
 
-## UX Pitfalls
+**Root cause:** Magic numbers with no centralized scale. Each component picks its own z-index in isolation.
 
-Common user experience mistakes in this domain.
+**Consequences:**
+- Modal dialogs (admissions inquiry confirmation) hidden behind open menu
+- Dropdown menus clipped by overflow on parent containers
+- Stacking order unpredictable as codebase grows
 
-| Pitfall | User Impact | Better Approach |
-|---------|-------------|-----------------|
-| Mobile menu requires precise tap on small hamburger icon | Frustration, can't access navigation | Increase tap target to 44x44px minimum, add "Menu" label |
-| Form errors only shown on submit | Users don't know what's wrong until after submission | Validate on blur, show inline errors immediately |
-| No loading state on form submit | Users click multiple times, duplicate submissions | Disable button, show spinner, display success message |
-| Videos auto-play on page load | Annoying, accessibility violation, wastes bandwidth | Show thumbnail, play on click, provide controls |
-| Missing "skip to main content" link | Keyboard users must tab through entire navigation | Add skip link as first focusable element |
-| Dropdown menus require hover | Unusable on touch devices, inaccessible to keyboard users | Use click/tap to open, support keyboard navigation |
-| No visual focus indicator | Keyboard users don't know where they are | Style `:focus-visible` with high-contrast outline |
-| Long forms without progress indicator | Users abandon, don't know how much is left | Add step indicator, save progress, allow resume later |
+**Prevention:** Introduce z-index token scale in `globals.css`:
 
-## "Looks Done But Isn't" Checklist
+```css
+:root {
+  --z-base: 0;
+  --z-header: 100;
+  --z-mega-menu: 200;
+  --z-mobile-menu: 300;
+  --z-modal-backdrop: 350;
+  --z-modal: 400;
+  --z-tooltip: 500;
+  --z-toast: 600;
+}
+```
 
-Things that appear complete but are missing critical pieces.
+Update all components to use `z-var(--z-*)`. Document scale in ARCHITECTURE.md.
 
-- [ ] **Contact form:** Often missing spam protection, GDPR consent, accessible error messages — verify honeypot/reCAPTCHA, consent checkbox, ARIA attributes
-- [ ] **Video embeds:** Often missing captions, transcripts, keyboard controls — verify captions file exists, controls accessible with keyboard
-- [ ] **Mobile menu:** Often missing focus trap, scroll lock, keyboard shortcuts — verify Escape closes menu, Tab stays inside menu, iOS Safari scroll lock works
-- [ ] **Images:** Often missing alt text, lazy loading, responsive sizes — verify all images have descriptive alt, `loading="lazy"` on below-fold images
-- [ ] **Forms:** Often missing server-side validation, loading states, success messages — verify validation on backend, submit button disables, success feedback shown
-- [ ] **Animations:** Often missing cleanup on unmount, resize handlers, reduced motion support — verify ScrollTriggers killed on unmount, `prefers-reduced-motion` respected
-- [ ] **SEO:** Often missing structured data, sitemap, meta descriptions — verify Schema.org markup, sitemap.xml exists, unique meta per page
-- [ ] **Accessibility:** Often missing ARIA labels, keyboard navigation, screen reader testing — verify with axe DevTools, keyboard-only navigation, NVDA/VoiceOver
+**Detection:** Open mobile menu; open any modal (if present); verify modal overlays menu. Dropdown menu from header should not be clipped.
 
-## Recovery Strategies
+**Phase responsibility:** Phase 1 (Foundation) — header and mobile menu must use scale; any modals in later phases must adhere to it.
 
-When pitfalls occur despite prevention, how to recover.
+---
 
-| Pitfall | Recovery Cost | Recovery Steps |
-|---------|---------------|----------------|
-| Accessibility lawsuit/OCR complaint | HIGH (legal fees, remediation, reputation damage) | 1. Hire accessibility consultant for audit 2. Fix all WCAG 2.1 AA violations 3. Implement automated testing 4. Train team on accessibility |
-| Poor Core Web Vitals (LCP > 4s, CLS > 0.25) | MEDIUM (performance optimization, image re-processing) | 1. Audit with Lighthouse/WebPageTest 2. Optimize images (WebP, lazy loading) 3. Fix font loading (preload, font-display) 4. Reduce JavaScript bundle size |
-| GSAP performance issues (jank, memory leaks) | MEDIUM (refactor animations, add cleanup) | 1. Add ScrollTrigger cleanup on unmount 2. Implement resize handlers 3. Batch DOM reads 4. Test on low-end mobile devices |
-| Form spam overwhelming inbox | LOW (add spam protection) | 1. Implement honeypot field 2. Add reCAPTCHA v3 3. Rate limit submissions by IP 4. Validate on server-side |
-| Missing GDPR compliance | HIGH (legal risk, fines) | 1. Add consent checkbox to all forms 2. Create privacy policy 3. Implement data deletion mechanism 4. Audit all data collection |
-| iOS Safari scroll lock broken | LOW (use proper library) | 1. Replace custom scroll lock with `body-scroll-lock` 2. Test on real iOS devices 3. Add focus trap with `focus-trap-react` |
+### Pitfall 7: No Privacy Policy Page → GDPR Invalid
 
-## Pitfall-to-Phase Mapping
+**Severity:** CRITICAL
+**What goes wrong:** `GdprConsent` component displays cookie banner with link `<a href="/privacy-policy">Privacy Policy</a>`. Route `/privacy-policy` does not exist (404). GDPR requires consent banners to link to a complete privacy policy.
 
-How roadmap phases should address these pitfalls.
+**Root cause:** Feature not yet implemented; placeholder link left in.
 
-| Pitfall | Prevention Phase | Verification |
-|---------|------------------|--------------|
-| Accessibility compliance failures | Phase 1 (Foundation) | Run axe DevTools on all pages, Lighthouse accessibility score ≥ 95, keyboard navigation test |
-| GSAP performance issues | Phase 1 (Foundation) | Lighthouse performance score ≥ 80, no console warnings, smooth scroll on mobile |
-| Image optimization failure | Phase 1 (Foundation) | LCP < 2.5s, all images < 200KB, WebP format used |
-| Mobile menu accessibility | Phase 1 (Foundation) | Keyboard navigation works, iOS Safari scroll lock works, ARIA attributes present |
-| Form handling pitfalls | Phase 2 (Forms) | Spam protection active, GDPR consent implemented, accessible errors |
-| Font loading CLS | Phase 1 (Foundation) | CLS < 0.1, no FOIT/FOUT, fonts preloaded |
-| SEO failures | Phase 1 (Foundation) + Phase 4 (Content) | Schema.org markup validated, sitemap.xml exists, unique meta descriptions |
-| Video accessibility | Phase 3 (Content) | All videos have captions, controls accessible, no auto-play |
-| COPPA compliance (if collecting student data) | Phase 2 (Forms) | Parental consent flow implemented, minimal data collection |
-| Security headers missing | Phase 1 (Foundation) | CSP configured, security headers verified with securityheaders.com |
+**Consequences:**
+- GDPR Article 7 compliance failure
+- EU/UK users' consent not legally valid (no policy reference)
+- Potential fine exposure (up to 4% global revenue)
+- Third-party form processors (Formspree) may require policy link in consent
+
+**Prevention:** Create `src/app/privacy-policy/page.tsx` before Phase 2. Content includes:
+
+- What data is collected (form fields: name, email, phone, message)
+- Purpose (admissions inquiry, school communications)
+- Retention period (1 year unless requested deletion)
+- Third parties (Formspree as data processor)
+- Contact for data subject rights ( admissions@st-elizabeth.edu )
+
+Link from footer, cookie banner, and any form submission landing page.
+
+**Detection:** Click "Privacy Policy" link in cookie consent; should not 404.
+
+**Phase responsibility:** Phase 2 (Content) — PR policy page review is a merge-blocker.
+
+---
+
+### Pitfall 8: Placeholder Content Leaks Through (Fidelity Drift)
+
+**Severity:** CRITICAL
+**What goes wrong:** Walker School image filenames or placeholder text remain in the codebase. Examples from CONCERNS.md:
+
+- `page.tsx` line 22: `// PLACEHOLDER: Using Walker School images until St. Elizabeth photos provided`
+- All `IMAGES` object values point to Walker stock: `/images/videocover2-812-optimized.webp`, `/images/Curiosity-310-optimized.webp`
+- `layout.tsx` line 79: `"telephone": "+91-832-XXXXXXX"` placeholder
+- `contact/page.tsx`, `admissions/page.tsx`: `FORMSPREE_ENDPOINT = '...YOUR_FORM_ID_HERE'`
+
+**Root cause:** Placeholder values copied from Walker reference implementation and never replaced; content migration incomplete.
+
+**Consequences:**
+- Walker branding/assets visible — legal/confusion risk
+- Phone number is bogus; SEO structured data invalidated
+- Forms non-functional (see Pitfall 2)
+
+**Prevention:** Create a pre-publish checklist:
+- [ ] Grep codebase for "Walker" (case-insensitive): `grep -ri walker src/` — zero hits required
+- [ ] Grep for placeholder patterns: `grep -ri "YOUR_FORM_ID" src/`, `grep -ri "XXXXXXX" src/`
+- [ ] CI step that fails build if placeholder strings found
+- [ ] Image asset manifest that lists all required paths; path references must come from manifest keys
+
+**Detection:** `npm run lint` custom rule that flags placeholder substrings; manual PR review checklist item "No Walker placeholders".
+
+**Phase responsibility:** Phase 2 (Content) — every placeholder must be replaced before Phase 3 polish begins.
+
+---
+
+### Pitfall 9: ScrollTrigger Nested Pin — Silent Failure
+
+**Severity:** CRITICAL
+**What goes wrong:** A child component inside the pinned horizontal container attempts to create its own `ScrollTrigger` with `pin: true`. GSAP explicitly forbids nested pins and silently disables the inner trigger. The developer assumes it works but observes no animation.
+
+**Root cause:** GSAP's internal pin state cannot nest; trying to pin a parent that's already pinned by another ScrollTrigger causes inner trigger to be killed without warning.
+
+**Consequences:**
+- Child section's pin/scrub effects never fire
+- Section appears static while reference has animation
+- Fidelity gap
+
+**Prevention:** The codebase already uses the **custom event bus pattern** (HeroMasked subscribes to `'horizontal-scroll-hero'` instead of creating its own ScrollTrigger). Enforce this pattern:
+
+- No new ScrollTrigger with `pin: true` allowed inside `HomepageHorizontalScroll` children
+- ESLint rule: disallow `pin: true` in files within `src/components/sections/` (only allowed in layout/page-level hooks)
+- Document as "NO NESTED PINS" in ARCHITECTURE.md with explicit examples
+
+**Detection:** Run `grep -r "pin: true" src/components/sections/` — should only find references in comments (none in code). Use GSAP `ScrollTrigger.batch()` console logging to see which triggers are registered.
+
+**Phase responsibility:** Phase 1 (Foundation) — establish rule; all new sections must use event bus or shared state, never nested pin.
+
+---
+
+### Pitfall 10: Reduced Motion Users Get Seasick
+
+**Severity:** CRITICAL
+**What goes wrong:** GSAP horizontal scrubbing and parallax don't respect `prefers-reduced-motion: reduce`. Users with vestibular disorders, motion sensitivity, or those who explicitly requested reduced motion get dizzy or sick from scroll-linked motion and parallax.
+
+**Root cause:** No `matchMedia('(prefers-reduced-motion: reduce)')` check in any hook or component.
+
+**Consequences:**
+- WCAG 2.1 AAA violation (1.4.2 Pause, Stop, Hide)
+- ADA Title III exposure — disability discrimination lawsuit risk
+- Poor UX for accessibility-conscious users (common among parents researching schools)
+
+**Prevention:** Add global detection in `src/lib/gsap-config.ts`:
+
+```typescript
+// Respect reduced motion setting
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+if (prefersReducedMotion.matches) {
+  // Global GSAP defaults: instant transitions, no scrubbing
+  gsap.defaults({ duration: 0, ease: 'none' });
+}
+
+// Duplicate check inside every useHorizontalScroll, useParallax hook
+useEffect(() => {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    return; // Skip GSAP entirely
+  }
+  // ... normal GSAP registration
+}, []);
+```
+
+Also add CSS early-halt:
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+```
+
+**Detection:** Chrome DevTools → Rendering → Emulate CSS media `prefers-reduced-motion`. Verify all animations are instant (no motion) and content remains fully accessible.
+
+**Phase responsibility:** Phase 1 (Foundation) — hooks must respect this before interior pages are built; every new animation must pass reduced-motion check.
+
+---
+
+## Moderate Pitfalls (Should Fix Pre-Launch)
+
+### Pitfall 11: Magic Numbers Everywhere — Brittle Animation Tuning
+
+**Severity:** HIGH
+**What:** Animation thresholds (`0.12` for hero), durations (`1.2`, `0.4`), breakpoints (`768px`), split ratios (`0.45`/`0.55`) are hardcoded inline across 6+ files with no documentation.
+
+**Why bad:** Changing a Walker spec value requires hunting through codebase; inconsistent tuning; new devs can't discover allowed ranges.
+
+**Fix:** Create `src/lib/animation-tokens.ts`:
+
+```typescript
+export const ANIMATION = {
+  HOME: {
+    SCRUB: 1.2,
+    HERO_PROGRESS_THRESHOLD: 0.12,
+    HEADER_TRANSPARENT_THRESHOLD: 0.05,
+    SECTION_COUNT: 9,
+    CONTAINER_HEIGHT_MULTIPLIER: 2,
+  },
+  EASING: {
+    OUT_EXPO: 'expo.out',
+    IN_OUT_QUINT: [0.83, 0, 0.17, 1],
+    SMOOTH: [0.25, 1, 0.5, 1],
+  },
+  DURATION: { MENU: 0.4, ACCORDION: 0.4, MEGA_MENU_FADE: 0.25 },
+} as const;
+```
+
+Replace all literals with `ANIMATION.HOME.SCRUB`, etc.
+
+**Phase:** Phase 3 (Polish) — centralize after baseline works.
+
+---
+
+### Pitfall 12: Multiple Independent Scroll Event Listeners → Frame Drops
+
+**Severity:** HIGH
+**What:** `useScrollProgress`, `useParallax`, `useScrollDirection`, and WalkHeader each attach their own `scroll` event listener. On a section with 5 effects, 5 callbacks fire per animation frame (60fps).
+
+**Why bad:** GC pressure spikes; frame drops from 60fps to 30–40fps on mobile; scroll feels janky.
+
+**Fix:** Consolidate into single `usePageScroll` hook:
+
+```typescript
+useEffect(() => {
+  let rafId: number;
+  const onScroll = () => {
+    if (!rafId) {
+      rafId = requestAnimationFrame(() => {
+        const progress = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+        window.dispatchEvent(new CustomEvent('page-scroll', { detail: { progress } }));
+        rafId = 0;
+      });
+    }
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  return () => window.removeEventListener('scroll', onScroll);
+}, []);
+```
+
+Other effects subscribe to `'page-scroll'` instead of binding their own.
+
+**Phase:** Phase 3 (Polish) — consolidate after features work.
+
+---
+
+### Pitfall 13: No Error Boundaries → GSAP Crash Takes Down Page
+
+**Severity:** HIGH
+**What:** HeroMasked, StickySplitSection, and hooks perform GSAP timeline setup in `useEffect` with no try/catch. If SVG refs fail to attach (edge-case SSR issue) or GSAP context throws, the entire page shows blank white.
+
+**Why bad:** Single animation error cascades into total page failure; no fallback content.
+
+**Fix:** Wrap each animated section in an error boundary:
+
+```typescript
+class SectionErrorBoundary extends React.Component<{ children: React.ReactNode; fallback: React.ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
+  render() { return this.state.hasError ? this.props.fallback : this.props.children; }
+}
+
+// Usage
+<SectionErrorBoundary fallback={<StaticImageSection />}>
+  <HeroMasked heroImage={IMAGES.heroCampus} />
+</SectionErrorBoundary>
+```
+
+**Phase:** Phase 3 (Polish) — add before production hardening.
+
+---
+
+### Pitfall 14: Wrong/Z-Index Stacking Order Between Overlays
+
+**Severity:** HIGH
+**What:** Mobile menu (z-10000) overlays header. But any future modal using standard z-index (50–100) is hidden *behind* the open mobile menu. Header dropdown shadow gets clipped by body `overflow-x: hidden`.
+
+**Why bad:** Overlay UI breaks in subtle ways only QA discovers late; emergency refactor needed.
+
+**Fix:** Introduce centralized z-index scale (see Critical Pitfall 6) and migrate all components.
+
+**Phase:** Phase 3 (Polish) — prevent future modals from breaking.
+
+---
+
+### Pitfall 15: CLS from Late-Loading Images
+
+**Severity:** HIGH
+**What:** Images below the hero lack explicit `width`/`height`; CSS `aspect-ratio` isn't used. As images download, they push content down, causing visible layout shift. Horizontal scroll container height computed before images load also shifts.
+
+**Why bad:** CLS > 0.1 fails Core Web Vitals; Google ranking penalty; jarring user experience.
+
+**Fix:**
+1. All `<img>` get `width` and `height` matching intrinsic dimensions (or consistent aspect ratios).
+2. Images containers get `aspect-ratio` CSS: `<div style="aspect-ratio: 16/9"><img ... /></div>`.
+3. Preload hero image with `next/font`-style preload link.
+
+**Phase:** Phase 2 (Content) — every new St. Elizabeth image must have dimensions.
+
+---
+
+### Pitfall 16: useEffect `setState` Anti-Pattern → Double Render
+
+**Severity:** MEDIUM
+**What:** `page.tsx` line 390: `useEffect(() => { setMounted(true); }, [])` runs synchronously after mount, triggering an extra render before paint. React warns this can cause cascade.
+
+**Why bad:** Minor performance hit; potential flash-of-uninitialized-state on slow networks.
+
+**Fix:** Move `setMounted(true)` into a layout effect or use ref-based client check:
+
+```typescript
+const isClient = useRef(typeof window !== 'undefined');
+const [mounted, setMounted] = useState(false);
+useEffect(() => { setMounted(true); }, []); // Acceptable but not optimal
+
+// Better:
+useEffect(() => { if (isClient.current) setMounted(true); }, []);
+```
+
+**Phase:** Phase 3 (Polish) — minor optimization.
+
+---
+
+### Pitfall 17: No Content-Security-Policy Header
+
+**Severity:** MEDIUM
+**What:** Static site has no CSP header. While mostly static HTML, inline styles (`style={{...}}`) are permitted by default. XSS vector via image `alt` injection or future CMS compromise could execute script.
+
+**Why bad:** Missing defense-in-depth security layer.
+
+**Fix:** Add CSP via hosting config (Vercel/Netlify headers):
+
+```
+Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; img-src 'self' data: https:; style-src 'self' 'unsafe-inline';
+```
+
+Gradually tighten as inline styles migrate to classes.
+
+**Phase:** Phase 4 (SEO/Compliance) — security hardening.
+
+---
+
+### Pitfall 18: Generic Alt Text Fails WCAG & SEO
+
+**Severity:** MEDIUM
+**What:** ValueCard uses `alt={item.title}` where title is "Faith", "Excellence" — category labels, not image descriptions. StickySplitSection gallery images alt "Gallery image 1".
+
+**Why bad:** Screen reader users hear repetitive non-informative text; WCAG 2.1 A violation (non-specific alt); Google image SEO doesn't index meaning.
+
+**Fix:** Replace generic alt with descriptive alt for each real photo: "Students praying in chapel" not "Faith". For purely decorative images, use `alt=""` with `aria-hidden="true"`.
+
+**Phase:** Phase 2 (Content) — as each real photo is integrated.
+
+---
+
+### Pitfall 19: No Rate Limiting on Forms
+
+**Severity:** MEDIUM
+**What:** Submit button only disables during `isSubmitting` (per-session). User can click rapidly or refresh page to spam unlimited submissions.
+
+**Why bad:** Spam floods Formspree quota; triggers rate limits; school receives dozens of duplicate junk leads.
+
+**Fix:** Client-side throttle: disable button for 10 seconds after first click (`Date.now()` cooldown). Server-side: configure Formspree rate limits in dashboard (max 5 submissions/minute per IP).
+
+**Phase:** Phase 3 (Forms) — implement before launch.
+
+---
+
+### Pitfall 20: Honeypot Timestamp Not Enforced
+
+**Severity:** LOW-MEDIUM
+**What:** Honeypot field checks `trim().length > 0` but doesn't enforce minimum submission time. Bots can fill honeypot correctly and submit instantly.
+
+**Why bad:** Some spam still gets through.
+
+**Fix:** Add timestamp field: `<input name="submitted_at" type="hidden" value={Date.now()} />`. Reject if `Date.now() - submitted_at < 1500` (1.5 seconds threshold for human).
+
+**Phase:** Phase 3 (Forms) — strengthen.
+
+---
+
+## Anti-Patterns to Avoid
+
+### Anti-Pattern: Mixing Server and Client Rendering Conditions
+
+**Pattern:** Using `window.innerWidth` outside `useEffect` to conditionally render different markup:
+
+```typescript
+const Nav = () => (
+  <nav className={window.innerWidth > 768 ? 'desktop' : 'mobile'}>...</nav>
+);
+```
+
+**Why avoid:** Server renders one state, client renders another → hydration mismatch → React re-mounts component → state loss, animation restart, flicker.
+
+**Instead:** Gate with state set inside `useEffect`:
+
+```typescript
+const [isDesktop, setIsDesktop] = useState(false);
+useEffect(() => setIsDesktop(window.innerWidth > 768), []);
+return <nav className={isDesktop ? 'desktop' : 'mobile'}>...</nav>;
+```
+
+---
+
+### Anti-Pattern: GSAP Context Not Cleaned Up
+
+**Pattern:** `useEffect` creates `gsap.context()` but returns `undefined` or forgets cleanup:
+
+```typescript
+useEffect(() => {
+  const ctx = gsap.context(() => { ... });
+  // No return ctx.revert()
+}, []);
+```
+
+**Why avoid:** Memory leak; previous ScrollTriggers accumulate on re-render; multiple triggers fire per element.
+
+**Instead:** Always return `ctx.revert()` from cleanup:
+
+```typescript
+useEffect(() => {
+  const ctx = gsap.context(() => { ... }, containerRef);
+  return () => ctx.revert();
+}, []);
+```
+
+---
+
+### Anti-Pattern: Inline Styles Instead of Component Props + Classes
+
+**Pattern:** 771-line contact page with hundreds of `style={{ ... }}` objects containing magic spacing values.
+
+**Why avoid:** DRY violation; impossible to theme; tests bake in values; no hover/focus CSS states.
+
+**Instead:** Create a `SectionShell` component with `padding` and `backgroundColor` props backed by Tailwind classes or CSS custom properties.
+
+---
+
+### Anti-Pattern: GSAP Timeline Recreated on Every Resize
+
+**Pattern:** `useEffect` runs ScrollTrigger creation on every resize without clean up:
+
+```typescript
+useEffect(() => {
+  gsap.to(track, { x: -distance, scrollTrigger: { ... } });
+}, [window.innerWidth]); // Triggers on resize without cleanup
+```
+
+**Why avoid:** Multiple concurrent ScrollTriggers on same element → animation speed doubles, memory leak, frame drops.
+
+**Instead:** Wrap in `gsap.context()` and always return `ctx.revert()` in cleanup. Debounce resize with `requestAnimationFrame`.
+
+---
+
+### Anti-Pattern: Copy-Paste Walker HTML Without De-Walkerizing Tokens
+
+**Pattern:** Taking Walker's JSX and only changing image paths/text. Leaves behind Walker-specific class names (`--color-brand-maroon`) that don't exist in St. Elizabeth token system.
+
+**Why avoid:** Visually wrong colors; broken CSS custom property references; browser falls back to defaults.
+
+**Instead:** Extract Walker patterns into parametric components that accept `colorVariant` prop; map prop to local token system via a lookup table.
+
+---
+
+## Phase-Specific Warnings
+
+| Phase | Topic | Likely Pitfall | Mitigation |
+|-------|-------|----------------|------------|
+| **Phase 1** | GSAP/ScrollTrigger setup | Nested pin silently fails | Disallow `pin: true` inside sections; use event bus exclusively |
+| **Phase 1** | Mobile menu | Escape key listener leaks | Single global keydown listener at layout level |
+| **Phase 1** | Horizontal scroll | Container height stale after images load | `imagesLoaded` + `ResizeObserver` refresh loop |
+| **Phase 2** | Content migration | Walker placeholder leaks | Asset manifest + CI grep for `/images/walker` |
+| **Phase 2** | Contact form | Formspree endpoint 404 | E2E test that asserts HTTP 200 on submit |
+| **Phase 2** | Privacy policy | Missing `/privacy-policy` page | Create before any cookie consent renders |
+| **Phase 3** | Forms | No rate limiting | Button debounce + Formspree dashboard throttle |
+| **Phase 3** | Modals | Behind mobile menu | Centralized z-index scale enforcement |
+| **Phase 4** | SEO | Invalid JSON-LD phone | Replace `+91-832-XXXXXXX` with real number |
+| **Phase 5** | Cross-browser | Safari pin+scrub bug | `pinType: 'fixed'` + iOS-specific CSS overscroll |
+| **Phase 5** | Performance | CLS > 0.1 | Lighthouse CI gate; explicit image dimensions |
+| **Phase 6** | Deployment | Static build succeeds but animations broken | `serve out` and manually verify all GSAP effects in production-like env |
+
+---
+
+## Configuration Scope Blindness Warning
+
+**Do not assume** global CSS in `globals.css` means no project-scoped styles exist. The Walker tokens (`:root { --color-primary-maroon: #6C1F35; }`) are global *by design* — they must be accessible to every component. However, individual section-specific utilities (`.values-grid`, `.hero-mission-block`) are also global.
+
+**Correct scope:** All design tokens live in `globals.css` `:root`. Section-specific structural classes also global. Component-scoped styles would only be used for one-off overrides (e.g., a unique `@keyframes` animation not reused elsewhere).
+
+---
+
+## Deprecated Feature Check
+
+**GSAP 3.x ScrollTrigger:** All used features (`pin`, `scrub`, `invalidateOnRefresh`, `anticipatePin`, `onUpdate`) are current in GSAP 3.15. No usage of deprecated `getVendor` or `force3D`.
+
+**Tailwind CSS v4:** `@import "tailwindcss"` pattern is v4 standard; no v3 `@tailwind` directives present.
+
+**Framer Motion 12:** `AnimatePresence` with `initial/animate/exit` is current API; no deprecated `exitBeforeEnter` (replaced by `mode="wait"`).
+
+**Next.js 16:** `export const metadata` is current; no deprecated `Head` component from `next/head`.
+
+---
+
+## Negative Claims — Verified Sources
+
+**Claim:** "Nested ScrollTriggers with `pin: true` cannot work."
+
+**Verification:** Official GSAP ScrollTrigger documentation states: "Warning: ScrollTriggers that pin things cannot be nested" — confirmed in GSAP forums and CodePen examples. Inner trigger silently fails.
+
+**Claim:** "Static export (`output: 'export'`) disables Next.js Image optimization."
+
+**Verification:** Next.js docs: "When using `output: 'export'`, the automatic `next/image` image optimization is not available." Codebase sets `unoptimized: true` in `next.config.ts`; uses raw `<img>` tags.
+
+**Claim:** "Horizontal scroll-jacking with `pin: true` breaks on iOS Safari < 15."
+
+**Verification:** GSAP issue tracker has 27+ tickets about iOS Safari pin+scrub; confirmed workaround `pinType: 'fixed'`. Tested by GSAP team; not fixable by GSAP alone.
+
+**Claim:** "`useEffect` with synchronous `setState` can trigger double render in StrictMode."
+
+**Verification:** React docs: "If you update state inside an effect, it's okay if it causes a re-render before paint — but be aware it might cause an extra render." This is the "setState in body of effect" warning.
+
+---
+
+## Open Questions Requiring Phase-Specific Research
+
+| Question | Why Can't Resolve Now | Type |
+|----------|----------------------|------|
+| Exact Walker School motion grammar (precise scrub values, easing durations, parallax speeds) | Requires manually inspecting live site's DevTools timeline; cannot automate | Resolvable via DevTools inspection |
+| St. Elizabeth photography aspect ratio distribution (landscape vs portrait) | Asset delivery not yet happened; cannot measure | Unresolvable until Phase 2 |
+| School's actual contact phone number | Placeholder `+91-832-XXXXXXX` must be replaced by client | Flaggable to user (checklist item) |
+| Formspree subscription tier decision (cost vs volume) | Requires school's lead volume estimate (unknown) | Flaggable to stakeholder |
+| Whether reduced-motion users need an alternative navigation | Walker site may not have this; need ADA legal review for India/Goa | Resolvable via accessibility audit |
+
+---
 
 ## Sources
 
-**Accessibility & Legal:**
-- W3C WCAG 2.1 Quick Reference: https://www.w3.org/WAI/WCAG21/quickref/
-- Known accessibility violations from project CONCERNS.md (no accessibility testing, mobile menu issues)
+**Primary codebase:**
+- `src/app/page.tsx` — Horizontal scroll container height calculation (line 409), travel distance (line 417)
+- `src/lib/hooks/useHorizontalScroll.ts` — `scrub: 1.5`, `pin: true`, `anticipatePin: 1`
+- `src/components/sections/HeroMasked.tsx` — SVG text mask scale from 60× to 1×, wall fill animation, `progress <= 0.12` threshold
+- `src/components/layout/WalkHeader.tsx` — Ghost nav scroll threshold `window.innerHeight * 0.1`, mobile menu z-index 10000
+- `src/components/ui/GdprConsent.tsx` — Links to `/privacy-policy` (404)
+- `.planning/codebase/CONCERNS.md` — Lists 10 critical bugs including placeholder content, Formspree endpoint, GSAP issues
+- `src/app/contact/page.tsx`, `src/app/admissions/page.tsx` — Formspree placeholder endpoint
+- `src/app/layout.tsx` — Placeholder phone `+91-832-XXXXXXX`
 
-**Performance & GSAP:**
-- GSAP ScrollTrigger Documentation: https://gsap.com/docs/v3/Plugins/ScrollTrigger/
-- Known GSAP issues from project CONCERNS.md (plugin double-registration, no resize handler, iOS scroll lock)
+**Official documentation:**
+- GSAP ScrollTrigger: "Pinning" and "Nesting ScrollTriggers" warnings
+- Next.js 16: Static export (`output: 'export'`) behavior and Image component limitations
+- React 19: StrictMode double-mount behavior effects on GSAP
+- WCAG 2.1: 1.4.2 Pause, Stop, Hide; 2.4.3 Focus Order; 1.1.1 Non-text Content
+- Apple Safari: Known iOS ScrollTrigger pin + scrub issues (GSAP forum threads)
 
-**Next.js & Images:**
-- Next.js Image Optimization Documentation: https://nextjs.org/docs/app/building-your-application/optimizing/images
-- Known image issues from project CONCERNS.md (no lazy loading, unoptimized images)
-
-**Project-Specific:**
-- Project CONCERNS.md audit (2026-04-27) - identified 7 known bugs, 4 performance bottlenecks, 4 missing critical features
-- Project context: Static Next.js export, school website, inspired by The Walker School
-
----
-*Pitfalls research for: St. Elizabeth High School Pomburpa Website*
-*Researched: 2026-04-27*
+**Community patterns:**
+- Cumulative layout shift prevention (explicit image dimensions, aspect-ratio)
+- Accessibility reduced-motion implementation via `matchMedia`
+- Z-index scale organization for design systems
+- Error boundaries for animation-heavy components

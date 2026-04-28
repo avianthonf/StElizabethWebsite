@@ -1,9 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
-import { gsap } from '@/lib/gsap-config';
 import { siteNavigation } from '@/lib/site-navigation';
-import { Menu, X, Search } from 'lucide-react';
+import { X, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RemoveScroll } from 'react-remove-scroll';
 
@@ -89,7 +89,7 @@ export function WalkHeader() {
           className="flex items-center justify-between h-20 px-6 md:px-12"
         >
           {/* Logo — St. Elizabeth in serif, tagline in sans */}
-          <a
+          <Link
             href="/"
             style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column' }}
           >
@@ -118,7 +118,7 @@ export function WalkHeader() {
             >
               High School
             </span>
-          </a>
+          </Link>
 
           {/* Desktop Nav — top-level links */}
           <nav

@@ -35,10 +35,10 @@
   9. User does not experience major cumulative layout shift from late-loading images or fonts (CLS remains low throughout initial load)
   10. Static export completes successfully (`npm run build`) and all homepage sections are present and functional in the `out/` directory
 **Plans**: 4 plans
-- [x] 01-01-PLAN.md — Horizontal scroll-jacking hardening (FND-01, FND-07)
-- [x] 01-02-PLAN.md — Ghost header + mega-menu + mobile overlay (FND-02, FND-03)
-- [x] 01-03-PLAN.md — Hero SVG mask, CLS elimination, reduced motion (FND-04, FND-07, FND-08)
-- [x] 01-04-PLAN.md — Section parity, responsive layouts, full reduced-motion + CLS guardrails (FND-05, FND-06, FND-08, FND-09, FND-10)
+- [x] 01-01-PLAN.md ï¿½ Horizontal scroll-jacking hardening (FND-01, FND-07)
+- [x] 01-02-PLAN.md ï¿½ Ghost header + mega-menu + mobile overlay (FND-02, FND-03)
+- [x] 01-03-PLAN.md ï¿½ Hero SVG mask, CLS elimination, reduced motion (FND-04, FND-07, FND-08)
+- [x] 01-04-PLAN.md ï¿½ Section parity, responsive layouts, full reduced-motion + CLS guardrails (FND-05, FND-06, FND-08, FND-09, FND-10)
 **UI hint**: yes
 
 ### Phase 2: Content & Interior Pages
@@ -51,11 +51,7 @@
   3. User can navigate directly to every primary interior page (About Us, Academics, Admissions, Student Life, Community, Contact, Arts, Athletics) via the navigation system
   4. User experiences consistent page templates across all interior pages with Walker-inspired hierarchy, breadcrumbs, layout patterns, and section styling
   5. User encounters only complete, production-quality content with no stub sections, placeholder text, or unfinished stubs on any page
-**Plans**: 4 plans
-- [x] 01-01-PLAN.md — Horizontal scroll-jacking hardening (FND-01, FND-07)
-- [x] 01-02-PLAN.md — Ghost header + mega-menu + mobile overlay (FND-02, FND-03)
-- [x] 01-03-PLAN.md — Hero SVG mask, CLS elimination, reduced motion (FND-04, FND-07, FND-08)
-- [x] 01-04-PLAN.md — Section parity, responsive layouts, full reduced-motion + CLS guardrails (FND-05, FND-06, FND-08, FND-09, FND-10)
+**Plans**: TBD
 **UI hint**: yes
 
 ### Phase 3: Forms, Polish & Edge Cases

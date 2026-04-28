@@ -1,5 +1,4 @@
 import { WalkHeader } from '@/components/layout/WalkHeader';
-import { Footer } from '@/components/layout/Footer';
 
 interface ContentPageProps {
   children: React.ReactNode;
@@ -49,7 +48,6 @@ export function ContentPage({
         </div>
       </main>
 
-      <Footer />
     </>
   );
 }

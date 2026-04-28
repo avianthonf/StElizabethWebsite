@@ -12,10 +12,15 @@
 
 # testing
 /coverage
+/playwright-report
+/test-results
 
 # next.js
 /.next/
 /out/
+tmp/
+scripts/inspect-value-section.mjs
+screenshot.js
 
 # production
 /build

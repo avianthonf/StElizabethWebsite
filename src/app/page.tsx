@@ -1,22 +1,19 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
+import { useState, useEffect } from 'react';
 import { gsap, ScrollTrigger } from '@/lib/gsap-config';
-import { HeroMasked } from "@/components/sections/HeroMasked";
-import { StickySplitSection } from "@/components/sections/StickySplitSection";
-import { WalkHeader } from "@/components/layout/WalkHeader";
-import { SkeletonLoader } from "@/components/ui/SkeletonLoader";
+import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion';
+import { HeroMasked } from '@/components/sections/HeroMasked';
+import { StickySplitSection } from '@/components/sections/StickySplitSection';
+import { WalkHeader } from '@/components/layout/WalkHeader';
+import { Carousel } from '@/components/ui/Carousel';
+import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
 
-// Debounce utility for resize handler
-function debounce<T extends (...args: any[]) => void>(
-  func: T,
-  wait: number
-): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout | null = null;
-  return (...args: Parameters<T>) => {
-    if (timeout) clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
+function handleImageLoad() {
+  requestAnimationFrame(() => {
+    ScrollTrigger.refresh();
+  });
 }
 
 // PLACEHOLDER: Using Walker School images until St. Elizabeth photos provided
@@ -62,36 +59,52 @@ const divisions = [
 ];
 
 // Individual value card
-function ValueCard({ item }: { item: typeof values[0] }) {
+function ValueCard({
+  item,
+  onImageLoad,
+}: {
+  item: typeof values[0];
+  onImageLoad: () => void;
+}) {
   return (
     <article
       style={{
         display: 'flex',
         flexDirection: 'column',
         width: '100%',
+        minWidth: 0,
       }}
     >
       <div style={{ position: 'relative', marginBottom: 16 }}>
-        <span
-          style={{
-            position: 'absolute',
-            top: -6,
-            left: -6,
-            zIndex: 1,
-            fontFamily: 'var(--font-heading)',
-            fontWeight: 900,
-            fontSize: 'clamp(2rem, 3vw, 3rem)',
-            lineHeight: 1,
-            color: 'var(--color-brand-maroon)',
-          }}
-        >
-          {item.number}
-        </span>
-        <div style={{ aspectRatio: '1', overflow: 'hidden', borderRadius: 4 }}>
-          <img
+        <div style={{ aspectRatio: '1', overflow: 'hidden', borderRadius: 4, position: 'relative' }}>
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              left: 'clamp(-10px, -0.8vw, -18px)',
+              bottom: 'clamp(10px, 1.6vw, 20px)',
+              zIndex: 1,
+              pointerEvents: 'none',
+              userSelect: 'none',
+              fontFamily: 'var(--font-heading)',
+              fontWeight: 900,
+              fontSize: 'clamp(4rem, 8vw, 7rem)',
+              lineHeight: 0.85,
+              letterSpacing: '-0.08em',
+              color: 'rgba(255,255,255,0.78)',
+              textShadow: '0 10px 24px rgba(0,0,0,0.14)',
+              maxWidth: '70%',
+            }}
+          >
+            {item.number}
+          </div>
+          <Image
             src={item.image}
             alt={item.title}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            onLoad={onImageLoad}
+            fill
+            sizes="(max-width: 768px) 100vw, 25vw"
+            style={{ objectFit: 'cover' }}
           />
         </div>
       </div>
@@ -124,10 +137,12 @@ function ValueCard({ item }: { item: typeof values[0] }) {
         style={{
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 4,
+          gap: 6,
+          minHeight: 44,
+          padding: '10px 14px 10px 0',
           fontFamily: 'var(--font-heading)',
           fontWeight: 700,
-          fontSize: 10,
+          fontSize: 11,
           textTransform: 'uppercase',
           letterSpacing: '0.1em',
           color: 'var(--color-text-dark)',
@@ -135,7 +150,7 @@ function ValueCard({ item }: { item: typeof values[0] }) {
         }}
       >
         Learn More
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
           <path d="M5 12h14M12 5l7 7-7 7" />
         </svg>
       </a>
@@ -144,22 +159,68 @@ function ValueCard({ item }: { item: typeof values[0] }) {
 }
 
 // Passions panel
-function PassionsPanel({ bg, textColor, number, label, description, image, imagePosition }: {
-  bg: string; textColor: string; number: string; label: string; description: string; image: string; imagePosition: "left" | "right";
+function PassionsPanel({
+  bg,
+  textColor,
+  number,
+  label,
+  description,
+  image,
+  imagePosition,
+  onImageLoad,
+}: {
+  bg: string;
+  textColor: string;
+  number: string;
+  label: string;
+  description: string;
+  image: string;
+  imagePosition: "left" | "right";
+  onImageLoad: () => void;
 }) {
   const descColor = bg === "var(--color-text-main)" ? "rgba(255,255,255,0.7)" : bg === "var(--color-primary-maroon)" ? "rgba(255,255,255,0.85)" : "rgba(51,51,51,0.7)";
+  const overlayOpacityByBackground: Record<string, number> = {
+    'var(--color-white)': 0.08,
+    'var(--color-primary-maroon)': 0.06,
+    'var(--color-text-main)': 0.06,
+  };
+  const overlayOpacity = overlayOpacityByBackground[bg] ?? 0.06;
+
   return (
     <div
       style={{
         backgroundColor: bg,
-        minWidth: '100vw',
-        height: '100vh',
-        flexShrink: 0,
+        width: '100%',
+        minHeight: '100vh',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          pointerEvents: 'none',
+          userSelect: 'none',
+          zIndex: 0,
+          opacity: overlayOpacity,
+          fontFamily: 'var(--font-heading)',
+          fontWeight: 900,
+          fontSize: 'clamp(8rem, 20vw, 22rem)',
+          lineHeight: 1,
+          letterSpacing: '-0.06em',
+          color: textColor,
+        }}
+      >
+        {number}
+      </div>
       <div
         style={{
           display: 'flex',
@@ -171,19 +232,32 @@ function PassionsPanel({ bg, textColor, number, label, description, image, image
           maxWidth: 1200,
           margin: '0 auto',
           flexDirection: imagePosition === 'right' ? 'row' : 'row-reverse',
+          position: 'relative',
+          zIndex: 1,
         }}
       >
-        <img
-          src={image}
-          alt={label}
+        <div
           style={{
-            maxHeight: '60vh',
+            position: 'relative',
+            height: '60vh',
+            width: 'min(40%, 420px)',
             maxWidth: '40%',
-            objectFit: 'contain',
-            filter: bg === 'var(--color-text-main)' ? 'brightness(1.15) drop-shadow(0 20px 50px rgba(0,0,0,0.4))' : 'drop-shadow(0 20px 50px rgba(0,0,0,0.15))',
+            flexShrink: 0,
           }}
-        />
-        <div style={{ maxWidth: 420 }}>
+        >
+          <Image
+            src={image}
+            alt={label}
+            onLoad={onImageLoad}
+            fill
+            sizes="(max-width: 768px) 100vw, 40vw"
+            style={{
+              objectFit: 'contain',
+              filter: bg === 'var(--color-text-main)' ? 'brightness(1.15) drop-shadow(0 20px 50px rgba(0,0,0,0.4))' : 'drop-shadow(0 20px 50px rgba(0,0,0,0.15))',
+            }}
+          />
+        </div>
+        <div style={{ maxWidth: 420, position: 'relative', zIndex: 1 }}>
           <p
             style={{
               fontFamily: 'var(--font-heading)',
@@ -235,33 +309,36 @@ interface DivisionItem {
   cta: string;
 }
 
-function DivisionsTabsHorizontal({ divisions }: { divisions: DivisionItem[] }) {
+function DivisionsTabsHorizontal({
+  divisions,
+  onImageLoad,
+}: {
+  divisions: DivisionItem[];
+  onImageLoad: () => void;
+}) {
   const [active, setActive] = useState(0);
+  const prefersReducedMotion = usePrefersReducedMotion();
   const activeDivision = divisions[active];
+  const tabTransition = prefersReducedMotion
+    ? 'none'
+    : 'background-color 0.42s cubic-bezier(0.25, 1, 0.5, 1), color 0.42s cubic-bezier(0.25, 1, 0.5, 1), transform 0.42s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.42s cubic-bezier(0.25, 1, 0.5, 1)';
+  const imageTransition = prefersReducedMotion
+    ? 'none'
+    : 'transform 0.48s cubic-bezier(0.25, 1, 0.5, 1), filter 0.48s cubic-bezier(0.25, 1, 0.5, 1)';
 
   return (
     <div
       style={{
         width: '100%',
-        height: '100vh',
+        minHeight: '100vh',
         backgroundColor: 'var(--color-white)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        padding: '0 clamp(24px, 4vw, 60px)',
+        padding: 'clamp(56px, 8vw, 96px) clamp(24px, 4vw, 60px)',
       }}
     >
-      <p
-        style={{
-          fontFamily: 'var(--font-heading)',
-          fontWeight: 700,
-          fontSize: 'clamp(0.7rem, 0.9vw, 0.875rem)',
-          letterSpacing: '0.15em',
-          textTransform: 'uppercase',
-          color: 'var(--color-brand-maroon)',
-          marginBottom: 12,
-        }}
-      >
+      <p className="text-overline" style={{ marginBottom: 12 }}>
         Academic Divisions
       </p>
       <h2
@@ -280,34 +357,42 @@ function DivisionsTabsHorizontal({ divisions }: { divisions: DivisionItem[] }) {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: '220px 1fr',
-          gap: 40,
+          gridTemplateColumns: '200px minmax(0, 1fr)',
+          gap: 56,
           alignItems: 'center',
         }}
       >
+
         {/* Tab buttons */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {divisions.map((div, i) => (
-            <button
-              key={div.id}
-              onClick={() => setActive(i)}
-              style={{
-                padding: '12px 16px',
-                textAlign: 'left',
-                background: i === active ? 'var(--color-primary-maroon)' : 'transparent',
-                color: i === active ? 'var(--color-white)' : 'var(--color-gray)',
-                border: 'none',
-                borderRadius: 4,
-                cursor: 'pointer',
-                fontFamily: 'var(--font-heading)',
-                fontWeight: 700,
-                fontSize: 'clamp(0.75rem, 0.9vw, 0.875rem)',
-                transition: 'all 0.2s',
-              }}
-            >
-              {div.label}
-            </button>
-          ))}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {divisions.map((div, i) => {
+            const isActive = i === active;
+
+            return (
+              <button
+                key={div.id}
+                onClick={() => setActive(i)}
+                style={{
+                  padding: '14px 18px',
+                  textAlign: 'left',
+                  background: isActive ? 'var(--color-primary-maroon)' : 'rgba(94, 22, 36, 0.04)',
+                  color: isActive ? 'var(--color-white)' : 'var(--color-text-dark)',
+                  border: 'none',
+                  borderRadius: 2,
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-heading)',
+                  fontWeight: 700,
+                  fontSize: 'clamp(0.75rem, 0.9vw, 0.875rem)',
+                  letterSpacing: '0.04em',
+                  boxShadow: isActive ? '0 10px 24px rgba(94,22,36,0.12)' : 'none',
+                  transform: 'translateX(0)',
+                  transition: tabTransition,
+                }}
+              >
+                {div.label}
+              </button>
+            );
+          })}
         </div>
 
         {/* Content area */}
@@ -320,25 +405,56 @@ function DivisionsTabsHorizontal({ divisions }: { divisions: DivisionItem[] }) {
             maxHeight: 400,
           }}
         >
-          <img
-            src={activeDivision.image}
-            alt={activeDivision.heading}
+          <div
             style={{
-              width: 'auto',
+              position: 'relative',
+              width: 'min(32vw, 420px)',
               height: '100%',
               maxHeight: 400,
-              objectFit: 'cover',
-              borderRadius: 8,
+              overflow: 'hidden',
+              borderRadius: 2,
+              flexShrink: 0,
+              boxShadow: '0 28px 60px rgba(0,0,0,0.14)',
             }}
-          />
-          <div style={{ flex: 1 }}>
+          >
+            <Image
+              key={activeDivision.id}
+              src={activeDivision.image}
+              alt={activeDivision.heading}
+              onLoad={onImageLoad}
+              fill
+              sizes="(max-width: 768px) 100vw, 32vw"
+              style={{
+                objectFit: 'cover',
+                borderRadius: 2,
+                transform: 'scale(1.03)',
+                filter: 'contrast(1.02) saturate(0.96)',
+                transition: imageTransition,
+              }}
+            />
+          </div>
+          <div style={{ flex: 1, maxWidth: 500, paddingRight: 'clamp(8px, 2vw, 32px)' }}>
+            <p
+              style={{
+                fontFamily: 'var(--font-heading)',
+                fontWeight: 700,
+                fontSize: 'clamp(0.72rem, 0.9vw, 0.875rem)',
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                color: 'var(--color-primary-maroon)',
+                marginBottom: 10,
+              }}
+            >
+              {activeDivision.label}
+            </p>
             <h3
               style={{
                 fontFamily: 'var(--font-heading)',
                 fontWeight: 900,
-                fontSize: 'clamp(1.25rem, 2vw, 1.75rem)',
+                fontSize: 'clamp(1.4rem, 2.4vw, 2rem)',
+                lineHeight: 1.05,
                 color: 'var(--color-text-dark)',
-                marginBottom: 12,
+                marginBottom: 14,
               }}
             >
               {activeDivision.heading}
@@ -347,9 +463,10 @@ function DivisionsTabsHorizontal({ divisions }: { divisions: DivisionItem[] }) {
               style={{
                 fontFamily: 'var(--font-body)',
                 fontSize: 'clamp(0.875rem, 1vw, 1rem)',
-                lineHeight: 1.6,
+                lineHeight: 1.65,
                 color: 'var(--color-gray)',
-                marginBottom: 20,
+                marginBottom: 22,
+                maxWidth: 420,
               }}
             >
               {activeDivision.description}
@@ -360,6 +477,8 @@ function DivisionsTabsHorizontal({ divisions }: { divisions: DivisionItem[] }) {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 6,
+                minHeight: 44,
+                padding: '10px 14px 10px 0',
                 fontFamily: 'var(--font-heading)',
                 fontWeight: 700,
                 fontSize: 11,
@@ -370,7 +489,7 @@ function DivisionsTabsHorizontal({ divisions }: { divisions: DivisionItem[] }) {
               }}
             >
               {activeDivision.cta}
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
             </a>
@@ -381,78 +500,163 @@ function DivisionsTabsHorizontal({ divisions }: { divisions: DivisionItem[] }) {
   );
 }
 
-export default function Home() {
-  const [mounted, setMounted] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
+function FooterCtaSection({
+  image,
+  onImageLoad,
+}: {
+  image: string;
+  onImageLoad: () => void;
+}) {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const [hasEntered, setHasEntered] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    if (prefersReducedMotion) {
+      return;
+    }
 
-  // Full-page horizontal scroll setup
-  useEffect(() => {
-    if (!mounted || !scrollContainerRef.current || !trackRef.current) return;
-
-    const ctx = gsap.context(() => {
-      const track = trackRef.current!;
-      const container = scrollContainerRef.current!;
-
-      const totalWidth = track.scrollWidth;
-      const viewportWidth = window.innerWidth;
-      const travelDistance = totalWidth - viewportWidth;
-
-      // The scroll distance is horizontal pixels, so the container height must
-      // also be set in pixels. Using `vh` here under-allocates scroll space on
-      // wide screens (e.g. 1920×1080), which makes later sections unreachable
-      // and leaves you staring at the white background of the current section.
-      container.style.height = `${travelDistance + window.innerHeight}px`;
-
-      // Keep one viewport of extra space so the pin can fully release cleanly.
-      container.style.minHeight = `${travelDistance + window.innerHeight * 2}px`;
-
-      // Create horizontal scroll animation
-      // scrub: 1.2 = 1.2s lag behind scroll = "heavy premium feel"
-      gsap.to(track, {
-        x: -travelDistance,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: container,
-          start: 'top top',
-          end: () => `+=${travelDistance}`,
-          scrub: 1.2,
-          pin: true,
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
-          // Dispatch progress events for child section animations
-          onUpdate: (self) => {
-            const progress = self.progress;
-
-            // Hero section occupies ~12% of horizontal travel (1 of 9 sections)
-            window.dispatchEvent(new CustomEvent('horizontal-scroll-progress', {
-              detail: { progress },
-            }));
-
-            window.dispatchEvent(new CustomEvent('horizontal-scroll-hero', {
-              detail: { progress },
-            }));
-          },
-        },
-      });
-    }, scrollContainerRef);
-
-    // Handle resize
-    const handleResize = debounce(() => {
-      ScrollTrigger.refresh();
-    }, 200);
-
-    window.addEventListener('resize', handleResize);
+    const activate = window.setTimeout(() => {
+      setHasEntered(true);
+    }, 80);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      ctx.revert();
+      window.clearTimeout(activate);
     };
-  }, [mounted]);
+  }, [prefersReducedMotion]);
+
+  const isActive = prefersReducedMotion || hasEntered;
+
+  const overlayTransition = prefersReducedMotion
+    ? 'none'
+    : 'opacity 0.7s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.7s cubic-bezier(0.25, 1, 0.5, 1)';
+  const contentTransition = prefersReducedMotion
+    ? 'none'
+    : 'opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1), transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
+  const imageTransition = prefersReducedMotion
+    ? 'none'
+    : 'transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), filter 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
+
+  return (
+    <div
+      style={{
+        width: '100%',
+        minHeight: '100vh',
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+    >
+      <Image
+        src={image}
+        alt="St. Elizabeth campus aerial view"
+        onLoad={onImageLoad}
+        fill
+        sizes="100vw"
+        style={{
+          objectFit: 'cover',
+          transform: isActive ? 'scale(1.02)' : 'scale(1.08)',
+          filter: isActive ? 'brightness(0.82) saturate(0.96)' : 'brightness(0.72) saturate(0.9)',
+          transition: imageTransition,
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: isActive ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.54)',
+          transition: overlayTransition,
+        }}
+      >
+        <div
+          style={{
+            opacity: isActive ? 1 : 0,
+            transform: isActive ? 'translateY(0)' : 'translateY(28px)',
+            transition: contentTransition,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            maxWidth: 760,
+            padding: '0 clamp(24px, 4vw, 60px)',
+            textAlign: 'center',
+          }}
+        >
+          <p className="text-overline" style={{ color: 'rgba(255,255,255,0.82)', marginBottom: 16 }}>
+            Admissions
+          </p>
+          <h2
+            style={{
+              fontFamily: 'var(--font-heading)',
+              fontWeight: 900,
+              fontSize: 'clamp(3rem, 10vw, 10rem)',
+              lineHeight: 0.9,
+              color: 'var(--color-white)',
+              textTransform: 'uppercase',
+              letterSpacing: '-0.03em',
+              marginBottom: 28,
+              textShadow: '0 18px 44px rgba(0,0,0,0.22)',
+            }}
+          >
+            Begin Your Journey
+          </h2>
+          <p
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: 'clamp(1rem, 1.3vw, 1.125rem)',
+              color: 'rgba(255,255,255,0.9)',
+              marginBottom: 32,
+              maxWidth: 520,
+              textAlign: 'center',
+              lineHeight: 1.65,
+            }}
+          >
+            St. Elizabeth High School welcomes students who are ready to grow in faith, pursue excellence, and serve others.
+          </p>
+          <a
+            href="/admissions"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              minHeight: 48,
+              padding: '16px 28px',
+              backgroundColor: 'var(--color-white)',
+              color: 'var(--color-text-dark)',
+              fontFamily: 'var(--font-heading)',
+              fontWeight: 700,
+              fontSize: 'clamp(0.7rem, 0.9vw, 0.8rem)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              textDecoration: 'none',
+              borderRadius: 2,
+              boxShadow: '0 16px 36px rgba(0,0,0,0.16)',
+            }}
+          >
+            Start the Application Process
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function Home() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      setMounted(true);
+    });
+  }, []);
+
+  const handlePageImageLoad = () => {
+    handleImageLoad();
+  };
 
   if (!mounted) {
     return (
@@ -468,219 +672,119 @@ export default function Home() {
   return (
     <>
       <WalkHeader />
+      <main aria-label="Homepage sections">
+        <div style={{ minHeight: '100vh', overflow: 'hidden' }}>
+          <HeroMasked heroImage={IMAGES.heroCampus} />
+        </div>
 
-      {/* Full-page horizontal scroll container — height set dynamically by GSAP useEffect */}
-      <div
-        ref={scrollContainerRef}
-        style={{ minHeight: '900vh', position: 'relative' }}
-        aria-label="Homepage sections"
-      >
-        {/* Sticky track that moves horizontally */}
-        <div
-          ref={trackRef}
+        <section
           style={{
-            position: 'sticky',
-            top: 0,
-            height: '100vh',
+            minHeight: '100vh',
             display: 'flex',
-            overflow: 'hidden',
-            willChange: 'transform',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            padding: 'clamp(56px, 8vw, 96px) clamp(24px, 4vw, 60px)',
+            backgroundColor: 'var(--color-white)',
           }}
         >
-          {/* SECTION 1: Hero */}
-          <div style={{ minWidth: '100vw', height: '100vh', flexShrink: 0, overflow: 'hidden' }}>
-            <HeroMasked heroImage={IMAGES.heroCampus} />
-          </div>
-
-          {/* SECTION 2: We Value */}
-          <div
+          <h2
             style={{
-              minWidth: '100vw',
-              minHeight: '100vh',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              padding: '0 clamp(24px, 4vw, 60px)',
-              backgroundColor: 'var(--color-white)',
+              fontFamily: 'var(--font-heading)',
+              fontWeight: 900,
+              fontSize: 'clamp(2rem, 5vw, 5rem)',
+              lineHeight: 1,
+              textTransform: 'uppercase',
+              letterSpacing: '-0.02em',
+              color: 'var(--color-text-dark)',
+              marginBottom: 40,
             }}
           >
-            <h2
-              style={{
-                fontFamily: 'var(--font-heading)',
-                fontWeight: 900,
-                fontSize: 'clamp(2rem, 5vw, 5rem)',
-                lineHeight: 1,
-                textTransform: 'uppercase',
-                letterSpacing: '-0.02em',
-                color: 'var(--color-text-dark)',
-                marginBottom: 40,
-              }}
-            >
-              We Value
-            </h2>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                gap: 'clamp(16px, 3vw, 32px)',
-              }}
-              className="values-grid"
-            >
-              {values.map((item) => (
-                <ValueCard key={item.number} item={item} />
-              ))}
-            </div>
-          </div>
-
-          {/* SECTION 3: Accolades */}
-          <StickySplitSection
-            overline="Recognized for Excellence"
-            heading="A Legacy of Faith and Learning"
-            body="For over five decades, St. Elizabeth High School has been a pillar of Catholic education in Goa. Our students excel academically, grow spiritually, and serve their community with distinction."
-            accordion={[
-              { title: "Academic Achievement", content: "Our students consistently achieve top results in SSC and HSC examinations, with many gaining admission to India's premier universities and colleges." },
-              { title: "Faith Formation", content: "Daily prayer, regular Mass, retreats, and service projects form the spiritual foundation of our school community." },
-              { title: "Community Impact", content: "Through service learning and outreach programs, our students make a tangible difference in Pomburpa and surrounding communities." },
-            ]}
-            leftImage={IMAGES.studentPortrait}
-            rightImages={[IMAGES.gallery1, IMAGES.gallery2, IMAGES.gallery3, IMAGES.gallery4]}
-            backgroundColor="white"
-          />
-
-          {/* SECTION 4: Mission */}
-          <StickySplitSection
-            overline="Our Purpose"
-            heading="Mission & Vision"
-            body="St. Elizabeth High School exists to form young men and women of faith, character, and academic excellence. Rooted in Catholic values and inspired by the example of St. Elizabeth, we prepare students to lead lives of purpose, service, and integrity."
-            accordion={[
-              { title: "Our History", content: "Founded in the heart of Goa, St. Elizabeth High School has served generations of families in Pomburpa and throughout the region." },
-              { title: "Our Catholic Identity", content: "As a Catholic school, we integrate faith into every aspect of learning. Daily prayer, religious education, sacramental preparation, and service to others form the heart of the St. Elizabeth experience." },
-              { title: "Our Vision", content: "We envision graduates who are intellectually curious, spiritually grounded, and committed to serving others." },
-            ]}
-            rightImages={[IMAGES.mission1, IMAGES.mission2, IMAGES.mission3, IMAGES.mission4]}
-            backgroundColor="light"
-          />
-
-          {/* SECTION 5: Athletics */}
-          <PassionsPanel
-            bg="var(--color-primary-maroon)"
-            textColor="var(--color-white)"
-            number="01"
-            label="Athletics"
-            description="From football to athletics, our sports programs build discipline, teamwork, and physical fitness. Students compete at district and state levels while developing character through sportsmanship."
-            image={IMAGES.athleticsCutout}
-            imagePosition="left"
-          />
-
-          {/* SECTION 6: Arts */}
-          <PassionsPanel
-            bg="var(--color-white)"
-            textColor="var(--color-text-main)"
-            number="02"
-            label="Arts & Music"
-            description="Creativity flourishes through music, drama, and visual arts. Our students perform in concerts, stage productions, and art exhibitions, discovering their talents and building confidence."
-            image={IMAGES.artsCutout}
-            imagePosition="right"
-          />
-
-          {/* SECTION 7: Academics */}
-          <PassionsPanel
-            bg="var(--color-text-main)"
-            textColor="var(--color-white)"
-            number="03"
-            label="Academics"
-            description="Rigorous curriculum aligned with SSC and HSC standards prepares students for university success. Our dedicated faculty challenge students to think critically and pursue excellence in every subject."
-            image={IMAGES.academicsCutout}
-            imagePosition="left"
-          />
-
-          {/* SECTION 8: Divisions Tabs */}
-          <DivisionsTabsHorizontal divisions={divisions} />
-
-          {/* SECTION 9: Footer CTA */}
-          <div
-            style={{
-              minWidth: '100vw',
-              height: '100vh',
-              flexShrink: 0,
-              overflow: 'hidden',
-              position: 'relative',
-            }}
+            We Value
+          </h2>
+          <Carousel
+            options={{ align: 'start', loop: false, dragFree: false, containScroll: 'trimSnaps' }}
+            className="values-carousel"
+            showDots={false}
           >
-            <img
-              src={IMAGES.campusAerial}
-              alt="St. Elizabeth campus aerial view"
-              style={{
-                position: 'absolute',
-                inset: 0,
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-              }}
-            />
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: 'rgba(0,0,0,0.45)',
-              }}
-            >
-              <h2
+            {values.map((item) => (
+              <div
+                key={item.number}
                 style={{
-                  fontFamily: 'var(--font-heading)',
-                  fontWeight: 900,
-                  fontSize: 'clamp(3rem, 10vw, 10rem)',
-                  lineHeight: 0.9,
-                  color: 'var(--color-white)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '-0.03em',
-                  marginBottom: 32,
+                  flex: '0 0 clamp(240px, 22vw, 320px)',
+                  minWidth: 0,
+                  paddingRight: 'clamp(16px, 2vw, 28px)',
                 }}
               >
-                Begin Your Journey
-              </h2>
-              <p
-                style={{
-                  fontFamily: 'var(--font-body)',
-                  fontSize: 'clamp(1rem, 1.3vw, 1.125rem)',
-                  color: 'rgba(255,255,255,0.9)',
-                  marginBottom: 32,
-                  maxWidth: 500,
-                  textAlign: 'center',
-                }}
-              >
-                St. Elizabeth High School welcomes students who are ready to grow in faith, pursue excellence, and serve others.
-              </p>
-              <a
-                href="/admissions"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '16px 28px',
-                  backgroundColor: 'var(--color-white)',
-                  color: 'var(--color-text-dark)',
-                  fontFamily: 'var(--font-heading)',
-                  fontWeight: 700,
-                  fontSize: 'clamp(0.7rem, 0.9vw, 0.8rem)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.1em',
-                  textDecoration: 'none',
-                }}
-              >
-                Start the Application Process
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
+                <ValueCard item={item} onImageLoad={handlePageImageLoad} />
+              </div>
+            ))}
+          </Carousel>
+        </section>
+
+        <StickySplitSection
+          overline="Recognized for Excellence"
+          heading="A Legacy of Faith and Learning"
+          body="For over five decades, St. Elizabeth High School has been a pillar of Catholic education in Goa. Our students excel academically, grow spiritually, and serve their community with distinction."
+          accordion={[
+            { title: "Academic Achievement", content: "Our students consistently achieve top results in SSC and HSC examinations, with many gaining admission to India's premier universities and colleges." },
+            { title: "Faith Formation", content: "Daily prayer, regular Mass, retreats, and service projects form the spiritual foundation of our school community." },
+            { title: "Community Impact", content: "Through service learning and outreach programs, our students make a tangible difference in Pomburpa and surrounding communities." },
+          ]}
+          leftImage={IMAGES.studentPortrait}
+          rightImages={[IMAGES.gallery1, IMAGES.gallery2, IMAGES.gallery3, IMAGES.gallery4]}
+          backgroundColor="white"
+        />
+
+        <StickySplitSection
+          overline="Our Purpose"
+          heading="Mission & Vision"
+          body="St. Elizabeth High School exists to form young men and women of faith, character, and academic excellence. Rooted in Catholic values and inspired by the example of St. Elizabeth, we prepare students to lead lives of purpose, service, and integrity."
+          accordion={[
+            { title: "Our History", content: "Founded in the heart of Goa, St. Elizabeth High School has served generations of families in Pomburpa and throughout the region." },
+            { title: "Our Catholic Identity", content: "As a Catholic school, we integrate faith into every aspect of learning. Daily prayer, religious education, sacramental preparation, and service to others form the heart of the St. Elizabeth experience." },
+            { title: "Our Vision", content: "We envision graduates who are intellectually curious, spiritually grounded, and committed to serving others." },
+          ]}
+          rightImages={[IMAGES.mission1, IMAGES.mission2, IMAGES.mission3, IMAGES.mission4]}
+          backgroundColor="light"
+        />
+
+        <PassionsPanel
+          bg="var(--color-primary-maroon)"
+          textColor="var(--color-white)"
+          number="01"
+          label="Athletics"
+          description="From football to athletics, our sports programs build discipline, teamwork, and physical fitness. Students compete at district and state levels while developing character through sportsmanship."
+          image={IMAGES.athleticsCutout}
+          imagePosition="left"
+          onImageLoad={handlePageImageLoad}
+        />
+
+        <PassionsPanel
+          bg="var(--color-white)"
+          textColor="var(--color-text-main)"
+          number="02"
+          label="Arts & Music"
+          description="Creativity flourishes through music, drama, and visual arts. Our students perform in concerts, stage productions, and art exhibitions, discovering their talents and building confidence."
+          image={IMAGES.artsCutout}
+          imagePosition="right"
+          onImageLoad={handlePageImageLoad}
+        />
+
+        <PassionsPanel
+          bg="var(--color-text-main)"
+          textColor="var(--color-white)"
+          number="03"
+          label="Academics"
+          description="Rigorous curriculum aligned with SSC and HSC standards prepares students for university success. Our dedicated faculty challenge students to think critically and pursue excellence in every subject."
+          image={IMAGES.academicsCutout}
+          imagePosition="left"
+          onImageLoad={handlePageImageLoad}
+        />
+
+        <DivisionsTabsHorizontal divisions={divisions} onImageLoad={handlePageImageLoad} />
+
+        <FooterCtaSection image={IMAGES.campusAerial} onImageLoad={handlePageImageLoad} />
+      </main>
     </>
   );
 }

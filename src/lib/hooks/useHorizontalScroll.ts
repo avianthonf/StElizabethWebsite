@@ -1,19 +1,54 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { gsap, ScrollTrigger } from '@/lib/gsap-config';
 
-// Debounce utility for resize handler
-function debounce<T extends (...args: any[]) => void>(
+type DebouncedFn<T extends (...args: unknown[]) => void> = ((...args: Parameters<T>) => void) & {
+  cancel: () => void;
+};
+
+function debounce<T extends (...args: unknown[]) => void>(
   func: T,
   wait: number
-): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout | null = null;
-  return (...args: Parameters<T>) => {
-    if (timeout) clearTimeout(timeout);
+): DebouncedFn<T> {
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+
+  const debounced = ((...args: Parameters<T>) => {
+    if (timeout !== null) clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
+  }) as DebouncedFn<T>;
+
+  debounced.cancel = () => {
+    if (timeout !== null) {
+      clearTimeout(timeout);
+      timeout = null;
+    }
   };
+
+  return debounced;
 }
+
+function getTravelDistance(track: HTMLDivElement): number {
+  return track.scrollWidth - window.innerWidth;
+}
+
+function refreshScrollAfterLoad() {
+  requestAnimationFrame(() => {
+    ScrollTrigger.refresh();
+  });
+}
+
+export { refreshScrollAfterLoad };
+
+export type HorizontalScrollRefs = {
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  trackRef: React.RefObject<HTMLDivElement | null>;
+};
+
+/**
+ * Keeps the horizontal scroll track measured from the live DOM so resize and
+ * late-loading assets do not leave unreachable whitespace at the end.
+ */
 
 /**
  * Walker "WE VALUE" horizontal scroll carousel.
@@ -30,10 +65,7 @@ function debounce<T extends (...args: any[]) => void>(
 export function useHorizontalScroll({
   containerRef,
   trackRef,
-}: {
-  containerRef: React.RefObject<HTMLDivElement | null>;
-  trackRef: React.RefObject<HTMLDivElement | null>;
-}) {
+}: HorizontalScrollRefs) {
   useEffect(() => {
     if (
       typeof window === 'undefined' ||
@@ -44,41 +76,65 @@ export function useHorizontalScroll({
     }
 
     const createScrollAnimation = () => {
-      const totalWidth = trackRef.current!.scrollWidth;
-      const viewportWidth = window.innerWidth;
-      const travelDistance = totalWidth - viewportWidth;
+      const track = trackRef.current;
+      const container = containerRef.current;
+
+      if (!track || !container) {
+        return null;
+      }
+
+      const travelDistance = getTravelDistance(track);
 
       return gsap.context(() => {
-        gsap.to(trackRef.current, {
+        gsap.to(track, {
           x: -travelDistance,
           ease: 'none',
           scrollTrigger: {
-            trigger: containerRef.current,
+            trigger: container,
             start: 'top top',
             end: '+=300%',
-            scrub: 1.5,
+            scrub: 1.2,
             pin: true,
             anticipatePin: 1,
+            invalidateOnRefresh: true,
           },
         });
       });
     };
 
+    const rebuildAnimation = () => {
+      animationContext?.revert();
+      animationContext = createScrollAnimation();
+      ScrollTrigger.refresh();
+    };
+
     let animationContext = createScrollAnimation();
+
+    if (!animationContext) {
+      return;
+    }
 
     const handleResize = debounce(() => {
       if (!containerRef.current || !trackRef.current) return;
 
-      animationContext.revert();
-      animationContext = createScrollAnimation();
-      ScrollTrigger.refresh();
-    }, 150);
+      rebuildAnimation();
+    }, 200);
+
+    const handleLoad = () => {
+      if (!containerRef.current || !trackRef.current) return;
+
+      rebuildAnimation();
+    };
 
     window.addEventListener('resize', handleResize);
+    window.addEventListener('load', handleLoad);
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      animationContext.revert();
+      window.removeEventListener('load', handleLoad);
+      handleResize.cancel();
+      animationContext?.revert();
     };
   }, [containerRef, trackRef]);
 }
+

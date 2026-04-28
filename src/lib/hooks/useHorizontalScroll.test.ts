@@ -1,12 +1,27 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
+import { ScrollTrigger, gsap } from '@/lib/gsap-config';
 import { useHorizontalScroll } from './useHorizontalScroll';
-import { gsap } from '@/lib/gsap-config';
 
-// Mock GSAP
+type ScrollAnimationConfig = {
+  x?: number;
+  scrollTrigger?: {
+    invalidateOnRefresh?: boolean;
+    scrub?: number;
+  };
+};
+
+function getGsapToCalls() {
+  return vi.mocked(gsap.to).mock.calls as Array<[unknown, ScrollAnimationConfig]>;
+}
+
+function getScrollTriggerRefreshCalls() {
+  return vi.mocked(ScrollTrigger.refresh).mock.calls;
+}
+
 vi.mock('@/lib/gsap-config', () => ({
   gsap: {
-    context: vi.fn((callback) => {
+    context: vi.fn((callback: () => void) => {
       callback();
       return { revert: vi.fn() };
     }),
@@ -22,9 +37,9 @@ describe('useHorizontalScroll', () => {
   let trackRef: React.RefObject<HTMLDivElement>;
 
   beforeEach(() => {
-    // Mock DOM elements
     const container = document.createElement('div');
     const track = document.createElement('div');
+
     Object.defineProperty(track, 'scrollWidth', { value: 3000, writable: true });
     Object.defineProperty(window, 'innerWidth', { value: 1200, writable: true });
 
@@ -44,7 +59,7 @@ describe('useHorizontalScroll', () => {
     expect(gsap.to).toHaveBeenCalledWith(
       trackRef.current,
       expect.objectContaining({
-        x: -1800, // 3000 - 1200 = 1800
+        x: -1800,
       })
     );
   });
@@ -53,25 +68,17 @@ describe('useHorizontalScroll', () => {
     vi.useFakeTimers();
     renderHook(() => useHorizontalScroll({ containerRef, trackRef }));
 
-    // Simulate resize
     Object.defineProperty(window, 'innerWidth', { value: 1000, writable: true });
 
-    const callCountBefore = (gsap.to as any).mock.calls.length;
+    const callCountBefore = getGsapToCalls().length;
     window.dispatchEvent(new Event('resize'));
 
-    // Should not call immediately (debounced)
-    expect((gsap.to as any).mock.calls.length).toBe(callCountBefore);
+    expect(getGsapToCalls().length).toBe(callCountBefore);
 
-    // Wait for debounce (150ms)
-    vi.advanceTimersByTime(150);
+    vi.advanceTimersByTime(200);
 
-    // Should have called gsap.to with new travel distance
-    expect((gsap.to as any).mock.calls.length).toBeGreaterThan(callCountBefore);
-
-    // Find the call with the new x value
-    const calls = (gsap.to as any).mock.calls;
-    const resizeCall = calls.find((call: any) => call[1]?.x === -2000);
-    expect(resizeCall).toBeDefined();
+    expect(getGsapToCalls().length).toBeGreaterThan(callCountBefore);
+    expect(getGsapToCalls().find((call) => call[1]?.x === -2000)).toBeDefined();
 
     vi.useRealTimers();
   });
@@ -80,33 +87,48 @@ describe('useHorizontalScroll', () => {
     vi.useFakeTimers();
     renderHook(() => useHorizontalScroll({ containerRef, trackRef }));
 
-    const callCountBefore = (gsap.to as any).mock.calls.length;
+    const refreshCallCountBefore = getScrollTriggerRefreshCalls().length;
 
-    // Trigger multiple resizes rapidly
     window.dispatchEvent(new Event('resize'));
     window.dispatchEvent(new Event('resize'));
     window.dispatchEvent(new Event('resize'));
 
-    // Should not call gsap.to yet (debounced)
-    expect((gsap.to as any).mock.calls.length).toBe(callCountBefore);
+    expect(getScrollTriggerRefreshCalls().length).toBe(refreshCallCountBefore);
 
-    // After debounce delay, should call once (or twice due to context re-execution)
-    vi.advanceTimersByTime(150);
-    expect((gsap.to as any).mock.calls.length).toBeGreaterThan(callCountBefore);
+    vi.advanceTimersByTime(199);
+    expect(getScrollTriggerRefreshCalls().length).toBe(refreshCallCountBefore);
 
-    // Verify debounce worked - should not have 3+ additional calls
-    const callCountAfter = (gsap.to as any).mock.calls.length;
-    expect(callCountAfter - callCountBefore).toBeLessThanOrEqual(3);
+    vi.advanceTimersByTime(1);
+    const refreshCallCountAfterDebounce = getScrollTriggerRefreshCalls().length;
+    expect(refreshCallCountAfterDebounce).toBeGreaterThan(refreshCallCountBefore);
+
+    vi.advanceTimersByTime(200);
+    expect(getScrollTriggerRefreshCalls().length).toBe(refreshCallCountAfterDebounce);
 
     vi.useRealTimers();
   });
 
-  it('cleans up resize listener on unmount', () => {
+  it('passes invalidateOnRefresh and aligned scrub timing to ScrollTrigger', () => {
+    renderHook(() => useHorizontalScroll({ containerRef, trackRef }));
+
+    expect(gsap.to).toHaveBeenCalledWith(
+      trackRef.current,
+      expect.objectContaining({
+        scrollTrigger: expect.objectContaining({
+          invalidateOnRefresh: true,
+          scrub: 1.2,
+        }),
+      })
+    );
+  });
+
+  it('cleans up resize and load listeners on unmount', () => {
     const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
     const { unmount } = renderHook(() => useHorizontalScroll({ containerRef, trackRef }));
 
     unmount();
 
     expect(removeEventListenerSpy).toHaveBeenCalledWith('resize', expect.any(Function));
+    expect(removeEventListenerSpy).toHaveBeenCalledWith('load', expect.any(Function));
   });
 });

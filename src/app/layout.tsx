@@ -30,6 +30,7 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://stelizabethhighschool.edu.in"),
   title: "St. Elizabeth High School | Pomburpa, Goa",
   description: "A Catholic high school in Pomburpa, Goa, India, dedicated to academic excellence, faith formation, and service. Empowering students through values-driven education.",
   keywords: ["St. Elizabeth High School", "Catholic school Goa", "Pomburpa school", "high school Goa", "Christian education India"],

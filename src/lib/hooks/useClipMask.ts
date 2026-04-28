@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { gsap, ScrollTrigger } from '@/lib/gsap-config';
+import { useEffect } from 'react';
+import { gsap } from '@/lib/gsap-config';
 
 export function useClipMask({
   containerRef,

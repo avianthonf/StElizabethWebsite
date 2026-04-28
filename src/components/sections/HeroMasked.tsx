@@ -1,44 +1,51 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useRef } from 'react';
-import { gsap } from '@/lib/gsap-config';
-
-declare global {
-  interface WindowEventMap {
-    'horizontal-scroll-hero': CustomEvent<{ progress: number }>;
-  }
-}
+import { gsap, ScrollTrigger } from '@/lib/gsap-config';
+import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion';
 
 /**
- * Walker "WE BELIEVE" Hero Section — Masking Engine (SOP-001).
+ * "WE BELIEVE" Hero Section — Masking Engine.
  *
- * The defining Walker effect: video is visible ONLY through the letters of
- * "WE BELIEVE." The surrounding area is a solid wall. As horizontal scroll
+ * The defining Walker effect: background is visible ONLY through the letters
+ * of "WE BELIEVE." The surrounding area is a solid wall. As vertical scroll
  * progresses, the text zooms from enormous (fills screen) down to readable size
- * while the solid wall fades to reveal itself.
+ * while the wall fades away to reveal the full hero image.
  *
  * Implementation: SVG mask on a white rectangle overlaid on the background.
- * The mask exposes the video only where the text letter shapes are.
+ * The mask exposes the hero image only where the text letter shapes are.
  *
- * IMPORTANT: This component is used INSIDE HomepageHorizontalScroll which already
- * has a ScrollTrigger with pin: true. We cannot have a nested pin — it silently fails.
- * SOLUTION: Instead of a separate ScrollTrigger, we use a progress-based animation
- * driven by a custom event dispatched from the parent's horizontal scroll handler.
- * The animation fires when horizontal-scroll-hero fires (first ~12% of horizontal travel).
+ * Vertical scroll adaptation: the timeline is scrubbed by a ScrollTrigger
+ * attached to the hero section itself, so the reveal plays as the hero
+ * section scrolls through the viewport in normal vertical document flow.
  */
 export function HeroMasked({ heroImage = '/images/videocover2-812-optimized.webp' }: { heroImage?: string }) {
   const maskGroupRef = useRef<SVGGElement>(null);
   const wallRef = useRef<SVGRectElement>(null);
+  const missionRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
-  const hasAnimatedRef = useRef(false);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const heroTl = gsap.timeline({ paused: true });
+    if (prefersReducedMotion) {
+      gsap.set(maskGroupRef.current, { scale: 1, transformOrigin: '50% 50%' });
+      gsap.set(wallRef.current, { fill: 'rgba(0,0,0,0)', opacity: 0 });
+      gsap.set(missionRef.current, { opacity: 1, y: 0 });
+      return;
+    }
+
+    gsap.set(missionRef.current, { opacity: 0, y: 18 });
+
+    const heroTl = gsap.timeline({
+      paused: true,
+      defaults: { ease: 'none' },
+    });
 
     // Zoom "WE BELIEVE" from enormous (scale 60x) down to readable (scale 1x)
-    // The wall fades from white to dark as the text zooms out
+    // The wall deepens briefly, then clears away to fully reveal the scene.
     heroTl
       .fromTo(
         maskGroupRef.current,
@@ -47,34 +54,34 @@ export function HeroMasked({ heroImage = '/images/videocover2-812-optimized.webp
       )
       .to(
         wallRef.current,
-        { fill: 'rgba(0,0,0,0.55)', ease: 'power1.in', duration: 1 },
+        { fill: 'rgba(0,0,0,0.68)', ease: 'power1.in', duration: 0.62 },
         0
+      )
+      .to(
+        wallRef.current,
+        { opacity: 0, ease: 'power2.out', duration: 0.38 },
+        0.62
+      )
+      .to(
+        missionRef.current,
+        { opacity: 1, y: 0, ease: 'power2.out', duration: 0.32 },
+        0.72
       );
 
-    const handleHeroScroll = (e: WindowEventMap['horizontal-scroll-hero']) => {
-      if (hasAnimatedRef.current) return;
-
-      const progress = e.detail.progress;
-
-      // Fire animation during first ~12% of horizontal scroll
-      // Progress 0 → 0.12 maps to animation 0 → 1
-      if (progress <= 0.12) {
-        const t = progress / 0.12;
-        heroTl.progress(t);
-
-        if (progress >= 0.12) {
-          hasAnimatedRef.current = true;
-        }
-      }
-    };
-
-    window.addEventListener('horizontal-scroll-hero', handleHeroScroll);
+    const scrollTriggerInstance = ScrollTrigger.create({
+      trigger: sectionRef.current,
+      start: 'top top',
+      end: 'bottom top',
+      scrub: 1.2,
+      invalidateOnRefresh: true,
+      animation: heroTl,
+    });
 
     return () => {
-      window.removeEventListener('horizontal-scroll-hero', handleHeroScroll);
+      scrollTriggerInstance.kill();
       heroTl.kill();
     };
-  }, []);
+  }, [prefersReducedMotion]);
 
   return (
     <section
@@ -88,19 +95,28 @@ export function HeroMasked({ heroImage = '/images/videocover2-812-optimized.webp
       }}
     >
       {/* ── 1. Background Image / Video ───────────────────────────────── */}
-      <img
+      <Image
         src={heroImage}
         alt="St. Elizabeth High School campus"
+        aria-hidden="true"
+        fill
+        sizes="100vw"
+        style={{
+          objectFit: 'cover',
+          objectPosition: 'center',
+          filter: 'brightness(0.9) saturate(0.98)',
+        }}
+      />
+      <div
         aria-hidden="true"
         style={{
           position: 'absolute',
           inset: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          objectPosition: 'center',
+          zIndex: 0,
+          background: 'linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.18) 100%)',
         }}
       />
+
 
       {/* ── 2. SVG Mask Overlay ───────────────────────────────────────────
           Mask logic (SVG spec):
@@ -158,7 +174,7 @@ export function HeroMasked({ heroImage = '/images/videocover2-812-optimized.webp
       </svg>
 
       {/* ── 3. Mission Block — bottom-left, clamp-based breathing room ─── */}
-      <div className="hero-mission-block hero-mission-safe-bottom" style={{ zIndex: 2, maxWidth: 380 }}>
+      <div ref={missionRef} className="hero-mission-block hero-mission-safe-bottom" style={{ zIndex: 2, maxWidth: 380 }}>
         <p className="text-overline" style={{ marginBottom: 10 }}>
           St. Elizabeth High School
         </p>

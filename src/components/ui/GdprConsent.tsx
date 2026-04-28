@@ -44,7 +44,7 @@ export function GdprConsent({ checked, onChange, error, id = 'gdpr-consent' }: G
         >
           I consent to St. Elizabeth High School collecting and storing my personal information
           submitted through this form for the purpose of responding to my inquiry. I understand
-          that my data will be processed in accordance with the school's{' '}
+          that my data will be processed in accordance with the school&apos;s{' '}
           <a
             href="/privacy-policy"
             style={{

@@ -43,7 +43,7 @@ export default function AcademicsPage() {
           <p style={{ marginBottom: 24 }}>
             We believe education is not merely the accumulation of knowledge, but the formation of
             the whole person — mind, body, and spirit. Our faculty are dedicated mentors who inspire
-            intellectual curiosity while nurturing each student's unique gifts and calling.
+            intellectual curiosity while nurturing each student&apos;s unique gifts and calling.
           </p>
           <p>
             From rigorous STEM courses to rich humanities and arts programs, St. Elizabeth students

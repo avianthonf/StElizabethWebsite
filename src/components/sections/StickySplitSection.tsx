@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import Image from 'next/image';
+import { useEffect, useRef, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion';
 
 interface AccordionItem {
   title: string;
@@ -17,6 +19,9 @@ interface StickySplitSectionProps {
   rightImages?: string[];
   backgroundColor?: 'white' | 'light' | 'dark' | 'maroon';
 }
+
+const RIGHT_IMAGE_HEIGHT_TOP = 'calc(65vh * 0.55 - 3px)';
+const RIGHT_IMAGE_HEIGHT_BOTTOM = 'calc(65vh * 0.45 - 3px)';
 
 /**
  * StickySplitSection adapted for horizontal scroll layout.
@@ -36,6 +41,77 @@ export function StickySplitSection({
   backgroundColor = 'white',
 }: StickySplitSectionProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [openHeight, setOpenHeight] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+  const contentRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const prefersReducedMotion = usePrefersReducedMotion();
+
+  useEffect(() => {
+    if (openIndex === null) return;
+
+    const updateOpenHeight = () => {
+      const content = contentRefs.current[openIndex];
+      setOpenHeight(content?.scrollHeight ?? 0);
+    };
+
+    window.addEventListener('resize', updateOpenHeight);
+
+    return () => {
+      window.removeEventListener('resize', updateOpenHeight);
+    };
+  }, [openIndex]);
+
+  const toggleAccordion = (index: number) => {
+    if (openIndex === index) {
+      setOpenIndex(null);
+      setOpenHeight(0);
+      return;
+    }
+
+    const content = contentRefs.current[index];
+    setOpenHeight(content?.scrollHeight ?? 0);
+    setOpenIndex(index);
+  };
+
+  const getAccordionMaxHeight = (index: number) => {
+    if (openIndex !== index) {
+      return '0px';
+    }
+
+    return `${openHeight}px`;
+  };
+
+  const setContentRef = (index: number, element: HTMLDivElement | null) => {
+    contentRefs.current[index] = element;
+  };
+
+  const accordionTransition = prefersReducedMotion
+    ? 'none'
+    : 'max-height 0.48s cubic-bezier(0.25, 1, 0.5, 1)';
+  const chevronTransition = prefersReducedMotion
+    ? 'none'
+    : 'transform 0.42s cubic-bezier(0.25, 1, 0.5, 1)';
+
+  const accordionBorderColor = backgroundColor === 'dark' || backgroundColor === 'maroon'
+    ? 'rgba(255,255,255,0.2)'
+    : 'var(--color-border-light)';
+
+  const sanitizedId = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const panelId = (index: number) => `sticky-split-panel-${sanitizedId(heading)}-${index}`;
+  const triggerId = (index: number) => `sticky-split-trigger-${sanitizedId(heading)}-${index}`;
+
+  useEffect(() => {
+    const updateIsMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    updateIsMobile();
+    window.addEventListener('resize', updateIsMobile);
+
+    return () => {
+      window.removeEventListener('resize', updateIsMobile);
+    };
+  }, []);
 
   // Map backgroundColor to actual values
   const bgColor = backgroundColor === 'light' ? 'var(--color-offwhite)'
@@ -50,9 +126,8 @@ export function StickySplitSection({
     <section
       style={{
         backgroundColor: bgColor,
-        width: '100vw',
-        height: '100vh',
-        flexShrink: 0,
+        width: '100%',
+        minHeight: '100vh',
         display: 'flex',
         alignItems: 'center',
         overflow: 'hidden',
@@ -61,10 +136,12 @@ export function StickySplitSection({
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: '45% 55%',
+          gridTemplateColumns: isMobile ? '1fr' : '42% 58%',
           width: '100%',
           height: '100%',
-          padding: '0 clamp(24px, 4vw, 60px)',
+          padding: isMobile ? '24px' : '0 clamp(8px, 2vw, 24px)',
+          gap: isMobile ? 24 : 0,
+          overflow: 'hidden',
         }}
       >
         {/* LEFT — Content */}
@@ -73,7 +150,7 @@ export function StickySplitSection({
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
-            paddingRight: 'clamp(24px, 4vw, 60px)',
+            paddingRight: isMobile ? 0 : 'clamp(8px, 2vw, 24px)',
             overflow: 'hidden',
           }}
         >
@@ -84,7 +161,7 @@ export function StickySplitSection({
               fontSize: 'clamp(0.75rem, 1vw, 0.875rem)',
               letterSpacing: '0.15em',
               textTransform: 'uppercase',
-              color: 'var(--color-brand-maroon)',
+              color: 'var(--color-primary-maroon)',
               marginBottom: 20,
             }}
           >
@@ -122,15 +199,17 @@ export function StickySplitSection({
             {accordion.map((item, i) => (
               <div key={i}>
                 <button
-                  onClick={() => setOpenIndex(openIndex === i ? null : i)}
+                  id={triggerId(i)}
+                  onClick={() => toggleAccordion(i)}
                   aria-expanded={openIndex === i}
+                  aria-controls={panelId(i)}
                   style={{
                     width: '100%',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     padding: '14px 0',
-                    borderTop: `1px solid ${backgroundColor === 'dark' || backgroundColor === 'maroon' ? 'rgba(255,255,255,0.2)' : 'var(--color-border-light)'}`,
+                    borderTop: `1px solid ${accordionBorderColor}`,
                     background: 'none',
                     borderLeft: 'none',
                     borderRight: 'none',
@@ -146,18 +225,23 @@ export function StickySplitSection({
                   <span>{item.title}</span>
                   <ChevronDown
                     size={16}
+                    aria-label={`Toggle ${item.title}`}
                     style={{
                       transform: openIndex === i ? 'rotate(180deg)' : 'rotate(0deg)',
-                      transition: 'transform 0.3s',
+                      transition: chevronTransition,
                       flexShrink: 0,
                     }}
                   />
                 </button>
                 <div
+                  id={panelId(i)}
+                  ref={(element) => setContentRef(i, element)}
+                  role="region"
+                  aria-labelledby={triggerId(i)}
                   style={{
                     overflow: 'hidden',
-                    maxHeight: openIndex === i ? '200px' : '0',
-                    transition: 'max-height 0.4s ease',
+                    maxHeight: getAccordionMaxHeight(i),
+                    transition: accordionTransition,
                   }}
                 >
                   <p
@@ -182,48 +266,78 @@ export function StickySplitSection({
         <div
           style={{
             display: 'flex',
-            alignItems: 'center',
+            flexDirection: isMobile ? 'column' : 'row',
+            alignItems: isMobile ? 'stretch' : 'center',
             justifyContent: 'flex-end',
-            gap: 12,
+            gap: isMobile ? 12 : 6,
             overflow: 'hidden',
+            minWidth: 0,
           }}
         >
           {leftImage && (
-            <img
-              src={leftImage}
-              alt="Student"
+            <div
               style={{
-                height: '65vh',
-                width: 'auto',
-                objectFit: 'cover',
-                borderRadius: 4,
+                position: 'relative',
+                height: isMobile ? '32vh' : '65vh',
+                width: isMobile ? '100%' : 'min(38vw, 480px)',
+                borderRadius: 2,
                 flexShrink: 0,
+                maxWidth: '100%',
+                overflow: 'hidden',
               }}
-            />
+            >
+              <Image
+                src={leftImage}
+                alt={`${heading} featured image`}
+                fill
+                sizes={isMobile ? '100vw' : '38vw'}
+                style={{
+                  objectFit: 'cover',
+                  borderRadius: 2,
+                }}
+              />
+            </div>
           )}
           {rightImages.length > 0 && (
             <div
               style={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 12,
-                maxHeight: '65vh',
+                gap: isMobile ? 12 : 6,
+                maxHeight: isMobile ? '32vh' : '65vh',
                 overflow: 'hidden',
+                minWidth: 0,
+                marginTop: isMobile ? 0 : '-6px',
               }}
             >
               {rightImages.slice(0, 4).map((src, i) => (
-                <img
+                <div
                   key={i}
-                  src={src}
-                  alt={`Gallery image ${i + 1}`}
                   style={{
-                    height: i === 0 ? 'calc(65vh * 0.55 - 6px)' : 'calc(65vh * 0.45 - 6px)',
-                    width: 'auto',
-                    objectFit: 'cover',
-                    borderRadius: 4,
+                    position: 'relative',
+                    height: isMobile
+                      ? '100%'
+                      : i === 0
+                        ? RIGHT_IMAGE_HEIGHT_TOP
+                        : RIGHT_IMAGE_HEIGHT_BOTTOM,
+                    width: isMobile ? '100%' : 'min(18vw, 220px)',
+                    borderRadius: 2,
                     flexShrink: 0,
+                    maxWidth: '100%',
+                    overflow: 'hidden',
                   }}
-                />
+                >
+                  <Image
+                    src={src}
+                    alt={`${heading} gallery image ${i + 1}`}
+                    fill
+                    sizes={isMobile ? '100vw' : '18vw'}
+                    style={{
+                      objectFit: 'cover',
+                      borderRadius: 2,
+                    }}
+                  />
+                </div>
               ))}
             </div>
           )}

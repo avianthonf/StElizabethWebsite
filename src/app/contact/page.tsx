@@ -3,7 +3,6 @@
 // TODO: Replace FORMSPREE_ENDPOINT with actual URL from Formspree dashboard
 // See user_setup in 03-02-PLAN.md for instructions
 
-import type { Metadata } from 'next';
 import { useState, useRef, FormEvent } from 'react';
 import { ContentPage, PageHero } from '@/components/templates/ContentPage';
 import { MapPin, Phone, Mail, Clock } from 'lucide-react';
@@ -157,7 +156,7 @@ export default function ContactPage() {
             marginBottom: 48,
           }}
         >
-          We welcome visitors to our campus. Whether you're a prospective family, community member,
+          We welcome visitors to our campus. Whether you&apos;re a prospective family, community member,
           or alumni, we invite you to experience St. Elizabeth firsthand. Contact us to schedule a
           campus tour or to learn more about our programs.
         </p>

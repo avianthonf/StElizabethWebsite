@@ -3,7 +3,6 @@
 // TODO: Replace FORMSPREE_ENDPOINT with actual URL from Formspree dashboard
 // See user_setup in 03-02-PLAN.md for instructions
 
-import type { Metadata } from 'next';
 import { useState, useRef, FormEvent } from 'react';
 import { ContentPage, PageHero } from '@/components/templates/ContentPage';
 import { validateAdmissionsForm, isHoneypotFilled, type AdmissionsFormData, type FormErrors } from '@/lib/form-validation';
@@ -153,7 +152,7 @@ export default function AdmissionsPage() {
           <p style={{ marginBottom: 24 }}>
             Our admission process is designed to identify students who will thrive in our rigorous
             academic environment and contribute to our vibrant school community. We seek families
-            who share our mission and are committed to partnering with us in their child's formation.
+            who share our mission and are committed to partnering with us in their child&apos;s formation.
           </p>
           <p>
             We invite you to explore St. Elizabeth and discover how our Catholic education can

@@ -50,6 +50,36 @@ html {
   scroll-behavior: smooth;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .values-scroll-track,
+  .hero-mask-text,
+  .cutout-panel-circle-btn,
+  .division-tab-btn::after,
+  .site-header {
+    transition: none !important;
+    animation: none !important;
+    will-change: auto !important;
+  }
+
+  .cutout-panel-circle-btn,
+  .cutout-panel-circle-btn:hover {
+    transform: translateX(-50%) !important;
+  }
+}
+
 body {
   background: var(--color-white);
   color: var(--color-text-main);

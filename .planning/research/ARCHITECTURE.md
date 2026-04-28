@@ -1,591 +1,412 @@
-# Architecture Research
+# Architecture Patterns: Walker Fidelity Clone Site
 
-**Domain:** School/Education Marketing Website
-**Researched:** 2026-04-27
-**Confidence:** HIGH
+**Domain:** Premium school marketing site (static export)
+**Researched:** 2026-04-28
+**Confidence:** HIGH — Based on existing codebase, verified component patterns, and architecture docs
 
-## Standard Architecture
+---
 
-### System Overview
+## Recommended Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     PRESENTATION LAYER                       │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐        │
-│  │ Layout  │  │ Sections│  │   UI    │  │  Pages  │        │
-│  │ (Header)│  │ (Hero)  │  │(Button) │  │ (Home)  │        │
-│  └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘        │
-│       │            │            │            │              │
-├───────┴────────────┴────────────┴────────────┴──────────────┤
-│                      DATA LAYER                              │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │  Content Source (Git-based CMS / Headless CMS)      │    │
-│  │  - Static JSON/MDX files                            │    │
-│  │  - Build-time data fetching                         │    │
-│  │  - Type-safe content models                         │    │
-│  └─────────────────────────────────────────────────────┘    │
-├─────────────────────────────────────────────────────────────┤
-│                    BUILD/DEPLOY LAYER                        │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐                   │
-│  │ Next.js  │  │   CDN    │  │ Webhooks │                   │
-│  │  Build   │  │(Vercel/  │  │(Rebuild) │                   │
-│  │          │  │Netlify)  │  │          │                   │
-│  └──────────┘  └──────────┘  └──────────┘                   │
-└─────────────────────────────────────────────────────────────┘
-```
+### High-Level Pattern: Horizontal Scroll-Jacking with Event Bus Coordination
 
-### Component Responsibilities
-
-| Component | Responsibility | Typical Implementation |
-|-----------|----------------|------------------------|
-| **Layout Components** | Global structure (header, footer, navigation) | WalkHeader (ghost nav), Footer with mega-menu |
-| **Section Components** | Large page blocks (hero, features, CTA) | HeroMasked, ValueCarousel, StickySplitSection, DivisionsTabs |
-| **UI Components** | Reusable primitives (buttons, cards, accordions) | Button, Accordion, Carousel |
-| **Page Templates** | Full page compositions | Home (landing), ContentPage (text-heavy), ListingPage (news/events) |
-| **Content Models** | Type-safe data structures | Event, NewsArticle, FacultyMember, Program |
-| **Data Fetchers** | Build-time content loading | getStaticProps, file system reads, CMS API calls |
-
-## Recommended Project Structure
+The homepage is a **full-viewport horizontal carousel** driven by vertical scroll progress. This is the defining Walker pattern and must be implemented exactly.
 
 ```
-src/
-├── app/                    # Next.js App Router pages
-│   ├── layout.tsx          # Root layout (fonts, metadata)
-│   ├── page.tsx            # Home page
-│   ├── about/              # About section pages
-│   ├── admission/          # Admission funnel pages
-│   ├── academics/          # Academic program pages
-│   ├── athletics/          # Athletics pages
-│   ├── news/               # News listing + detail pages
-│   └── events/             # Events calendar + detail pages
-├── components/
-│   ├── layout/             # Global layout components
-│   │   ├── Header.tsx      # Site header (WalkHeader)
-│   │   ├── Footer.tsx      # Site footer
-│   │   └── Navigation.tsx  # Mega-menu navigation
-│   ├── sections/           # Large page sections (organisms)
-│   │   ├── HeroMasked.tsx
-│   │   ├── ValueCarousel.tsx
-│   │   ├── StickySplitSection.tsx
-│   │   ├── DivisionsTabs.tsx
-│   │   ├── FooterCtaSection.tsx
-│   │   ├── FacultyGrid.tsx
-│   │   ├── EventsCalendar.tsx
-│   │   └── NewsListing.tsx
-│   ├── ui/                 # Reusable UI primitives (atoms/molecules)
-│   │   ├── Button.tsx
-│   │   ├── Card.tsx
-│   │   ├── Accordion.tsx
-│   │   ├── Carousel.tsx
-│   │   └── Modal.tsx
-│   └── templates/          # Page templates (optional)
-│       ├── LandingPage.tsx
-│       ├── ContentPage.tsx
-│       └── ListingPage.tsx
-├── lib/
-│   ├── content/            # Content fetching utilities
-│   │   ├── get-news.ts
-│   │   ├── get-events.ts
-│   │   └── get-faculty.ts
-│   ├── hooks/              # Custom React hooks
-│   ├── utils.ts            # Utility functions
-│   └── site-navigation.ts  # Navigation data structure
-├── data/                   # Static content (if using Git-based CMS)
-│   ├── news/               # News articles (MDX/JSON)
-│   ├── events/             # Events (JSON)
-│   ├── faculty/            # Faculty profiles (JSON)
-│   └── programs/           # Academic programs (MDX)
-├── types/                  # TypeScript type definitions
-│   ├── content.ts          # Content model types
-│   └── navigation.ts       # Navigation types
-└── public/
-    ├── images/             # Static images
-    └── documents/          # PDFs, forms, etc.
+User scrolls vertically → container height ×3-4 viewports → GSAP translates track left → 9 sections slide in
 ```
 
-### Structure Rationale
+**Key architectural constraint:** Because the homepage uses `pin: true` on the outer ScrollTrigger, **no nested ScrollTriggers are allowed** inside child sections. Instead, child sections subscribe to a custom event bus (`horizontal-scroll-progress`, `horizontal-scroll-hero`) dispatched by the parent ScrollTrigger's `onUpdate`.
 
-- **app/:** Next.js App Router provides file-based routing. Each folder = route segment. Mirrors site navigation structure for clarity.
-- **components/layout/:** Global components used across all pages. Separated from sections because they're structural, not content.
-- **components/sections/:** Large, reusable page blocks. These are "organisms" in atomic design—composed of multiple UI components.
-- **components/ui/:** Small, reusable primitives. These are "atoms" and "molecules"—buttons, cards, inputs.
-- **data/:** Static content files (if using Git-based CMS). Organized by content type for easy editing.
-- **lib/content/:** Content fetching logic. Abstracts data source (file system, CMS API) from components.
+### Component System Boundaries
 
-## Architectural Patterns
+| Layer | Responsibility | Location | Communication |
+|-------|---------------|----------|---------------|
+| **Pages** | Top-level route composition, layout assembly | `src/app/page.tsx`, `src/app/about/page.tsx` | Import section components; pass inline data props |
+| **Sections** | Full-viewport or content-block components; self-contained layout | `src/components/sections/*` | Use custom events to react to scroll; no ScrollTrigger creation |
+| **UI Primitives** | Small reusable building blocks (buttons, accordions, breadcrumbs) | `src/components/ui/*` | Pure UI; no animation coordination with scroll |
+| **Layout** | Global persistent elements (header, footer) | `src/components/layout/*` | Listen to global scroll events; dispatch state |
+| **Hooks** | Animation and scroll logic separated from JSX | `src/lib/hooks/*` | Accept refs; register GSAP effects; cleanup via `gsap.context()` |
+| **Data** | Static content definitions (navigation, homepage IMAGES/values/divisions) | `src/lib/site-navigation.ts`, inline in page.tsx | Exported typed arrays; fetched via utility functions |
 
-### Pattern 1: Hybrid Static + Dynamic Islands
+### Data Flow Architecture
 
-**What:** Core pages are statically generated at build time. Frequently updated content (events calendar, news feed) is fetched client-side from external APIs or services.
+```
+┌──────────────────────────────────────────────────────────┐
+│  Build Time (Next.js static export)                      │
+├──────────────────────────────────────────────────────────┤
+│  1. page.tsx imports:                                     │
+│     - IMAGES object (image paths)                         │
+│     - values array (4 items)                              │
+│     - divisions array (5 grades)                          │
+│  2. Components render with props                          │
+│  3. Static HTML/CSS/JS written to out/                    │
+└──────────────────────────────────────────────────────────┘
+                          ↓
+┌──────────────────────────────────────────────────────────┐
+│  Runtime (Browser)                                        │
+├──────────────────────────────────────────────────────────┤
+│  1. Hydration: Client components ('use client') mount     │
+│  2. WalkHeader registers scroll + custom event listeners │
+│  3. HomepageHorizontalScroll creates GSAP ScrollTrigger  │
+│     - Calculates travelDistance based on track.scrollWidth│
+│     - Sets container style.minHeight = travelDistance + viewportHeight × 2 │
+│     - Binds horizontal-x translation with scrub: 1.2     │
+│     - Dispatches custom events on onUpdate callback      │
+│  4. HeroMasked subscribes to 'horizontal-scroll-hero'    │
+│     - Animates SVG mask scale + wall fill during first 12%│
+│  5. GSAP context reverts on unmount                       │
+└──────────────────────────────────────────────────────────┘
+```
 
-**When to use:** 
-- Static export requirement (no server-side rendering)
-- Content has mixed update frequencies (core pages change rarely, events/news change daily)
-- Need instant content updates without full site rebuilds
+---
 
-**Trade-offs:**
-- **Pros:** Fast static pages, instant content updates, no rebuild bottleneck, leverages existing tools (Google Calendar, WordPress)
-- **Cons:** SEO challenges (dynamic content not in initial HTML), performance hit from client-side fetching, dependency on external service uptime
+## Core Architectural Patterns
 
-**Example:**
+### Pattern 1: Horizontal Scroll-Jacking Container (Homepage)
+
+**What:** The homepage is not a traditional vertical page. Instead, the document body scrolls vertically through a tall invisible container, and that vertical scroll motion is mapped to horizontal translation of a sticky track.
+
+**Architecture:**
+
+```tsx
+// Container: invisible tall element that creates scroll space
+<div ref=scrollContainer style={{ height: `${travelDistance + viewportHeight * 2}px` }}>
+  // Track: sticky full-viewport strip sliding horizontally
+  <div ref=track style={{ position: 'sticky', top: 0, height: '100vh', display: 'flex' }}>
+    {sections.map(section => (
+      <div style={{ minWidth: '100vw', height: '100vh' }}>
+        {section}
+      </div>
+    ))}
+  </div>
+</div>
+```
+
+**GSAP Configuration:**
+
 ```typescript
-// Static page shell
-export default function EventsPage() {
-  return (
-    <>
-      <PageHeader title="Upcoming Events" />
-      <EventsCalendar /> {/* Client-side fetch */}
-    </>
-  );
-}
-
-// Client-side data fetching
-'use client';
-export function EventsCalendar() {
-  const [events, setEvents] = useState<Event[]>([]);
-  
-  useEffect(() => {
-    fetch('/api/events') // or Google Calendar API
-      .then(res => res.json())
-      .then(setEvents);
-  }, []);
-  
-  return <EventsList events={events} />;
-}
+gsap.to(track, {
+  x: -travelDistance,
+  ease: 'none',
+  scrollTrigger: {
+    trigger: container,
+    start: 'top top',
+    end: () => `+=${travelDistance}`,
+    scrub: 1.2,           // 1.2s lag = heavy/premium feel
+    pin: true,
+    anticipatePin: 1,     // Predicts pin point for smoother release
+    invalidateOnRefresh: true,
+    onUpdate: (self) => {
+      window.dispatchEvent(new CustomEvent('horizontal-scroll-progress', {
+        detail: { progress: self.progress }
+      }));
+    }
+  }
+});
 ```
 
-### Pattern 2: Git-based CMS + Build-time Generation
+**Why this pattern:** Walker's reference uses this horizontal narrative. It creates a guided, cinematic experience where users don't miss sections.
 
-**What:** Content stored as JSON/MDX files in the repository. Git-based CMS (TinaCMS, Decap CMS) provides a GUI for editing. Changes trigger static site rebuilds.
+**When to use:** Homepages of premium marketing sites, portfolio sites, storytelling landing pages.
 
-**When to use:**
-- Small to medium content volume (<1000 pages)
-- Content updates are infrequent (weekly, not hourly)
-- Team comfortable with Git workflows
-- Budget constraints (free hosting)
+---
 
-**Trade-offs:**
-- **Pros:** Content versioned in Git (audit trail, rollback), no external CMS costs, type safety from data to component, works perfectly with static export
-- **Cons:** Build time increases with content volume, no instant publish (requires rebuild), Git-based CMS UI can be clunky, image management more complex
+### Pattern 2: Custom Event Bus for Scroll Coordination
 
-**Example:**
+**What:** Because the outer horizontal ScrollTrigger uses `pin: true`, child sections cannot create nested ScrollTriggers (they silently fail). Instead, they subscribe to custom DOM events dispatched by the parent.
+
+**Implementation:**
+
 ```typescript
-// Content file: data/news/2026-04-spring-concert.json
-{
-  "title": "Spring Concert 2026",
-  "date": "2026-05-15",
-  "author": "Music Department",
-  "body": "Join us for our annual spring concert...",
-  "image": "/images/spring-concert-2026.jpg"
-}
-
-// Build-time data fetching
-import fs from 'fs';
-import path from 'path';
-
-export async function getNewsArticles(): Promise<NewsArticle[]> {
-  const newsDir = path.join(process.cwd(), 'data/news');
-  const files = fs.readdirSync(newsDir);
-  
-  return files.map(file => {
-    const content = fs.readFileSync(path.join(newsDir, file), 'utf-8');
-    return JSON.parse(content);
-  });
-}
-
-// Page component
-export default async function NewsPage() {
-  const articles = await getNewsArticles();
-  return <NewsListing articles={articles} />;
-}
-```
-
-### Pattern 3: Headless CMS + Build-time Fetch
-
-**What:** Content managed in a headless CMS (Sanity, Contentful, Strapi). Next.js fetches data at build time via CMS API and generates static pages. Webhooks trigger rebuilds on content changes.
-
-**When to use:**
-- Large content volume (>1000 pages)
-- Multiple non-technical content editors
-- Need rich media management (image CDN, transformations)
-- Budget allows for CMS hosting costs
-
-**Trade-offs:**
-- **Pros:** Best-in-class editing experience, rich media management, preview modes, scales to large content volumes, separation of concerns
-- **Cons:** External dependency (CMS uptime, API limits), potential costs (pricing tiers), more complex setup, vendor lock-in risk
-
-**Example:**
-```typescript
-// Sanity client configuration
-import { createClient } from '@sanity/client';
-
-const client = createClient({
-  projectId: process.env.SANITY_PROJECT_ID,
-  dataset: 'production',
-  apiVersion: '2024-01-01',
-  useCdn: false, // Use CDN for production
+// Parent (Homepage): dispatch events
+ScrollTrigger.create({
+  onUpdate: (self) => {
+    window.dispatchEvent(new CustomEvent('horizontal-scroll-progress', {
+      detail: { progress: self.progress }
+    }));
+    // Hero uses its own threshold (first 12%)
+    window.dispatchEvent(new CustomEvent('horizontal-scroll-hero', {
+      detail: { progress: self.progress }
+    }));
+  }
 });
 
-// Build-time data fetching
-export async function getNewsArticles(): Promise<NewsArticle[]> {
-  return client.fetch(`
-    *[_type == "newsArticle"] | order(publishedAt desc) {
-      title,
-      slug,
-      publishedAt,
-      author->{name},
-      body,
-      "imageUrl": mainImage.asset->url
-    }
-  `);
-}
-
-// Webhook endpoint to trigger rebuild (Vercel/Netlify)
-// POST /api/rebuild?secret=xxx
+// Child (HeroMasked): subscribe to events
+useEffect(() => {
+  const handler = (e: WindowEventMap['horizontal-scroll-hero']) => {
+    const t = e.detail.progress / 0.12; // Map 0–0.12 → 0–1 timeline
+    heroTl.progress(t);
+  };
+  window.addEventListener('horizontal-scroll-hero', handler);
+  return () => window.removeEventListener('horizontal-scroll-hero', handler);
+}, []);
 ```
 
-### Pattern 4: Component Composition (Atomic Design)
+**Why this pattern:** Avoids nested ScrollTrigger pitfalls; enables loose coupling between parent scroll state and child animations.
 
-**What:** Components organized in layers: atoms (Button, Input) → molecules (SearchBar, Card) → organisms (Header, Hero) → templates (LandingPage) → pages (Home).
+**When to use:** Any pinned scroll container with child animations needing scroll position awareness.
 
-**When to use:** Always. This is the standard React component architecture pattern.
+---
 
-**Trade-offs:**
-- **Pros:** Reusability, consistency, easier testing, clear boundaries, scalable
-- **Cons:** Can feel over-engineered for small sites, requires discipline to maintain boundaries
+### Pattern 3: SVG Text Mask with GSAP-driven Scale
 
-**Example:**
-```typescript
-// Atom: Button
-export function Button({ children, ...props }: ButtonProps) {
-  return <button className="btn" {...props}>{children}</button>;
-}
+**What:** The Walker School hero reveals a background image/video only through the letters of "WE BELIEVE" (or school motto) via an SVG mask. As user scrolls horizontally, the text zooms from 60× scale (fills entire viewport) down to 1× (normal reading size) while the white wall around the letters fades to dark overlay.
 
-// Molecule: Card
-export function Card({ title, body, image }: CardProps) {
-  return (
-    <div className="card">
-      <img src={image} alt={title} />
-      <h3>{title}</h3>
-      <p>{body}</p>
-      <Button>Learn More</Button>
-    </div>
-  );
-}
+**Architecture:**
 
-// Organism: FacultyGrid
-export function FacultyGrid({ faculty }: FacultyGridProps) {
-  return (
-    <section className="faculty-grid">
-      <h2>Our Faculty</h2>
-      <div className="grid">
-        {faculty.map(member => (
-          <Card
-            key={member.id}
-            title={member.name}
-            body={member.bio}
-            image={member.photo}
-          />
-        ))}
-      </div>
-    </section>
-  );
-}
+```svg
+<mask id="hero-mask">
+  <!-- White rectangle = fully visible -->
+  <rect width="100" height="100" fill="white" />
+  <!-- Black text = transparent cutouts (reveals background) -->
+  <g ref={textGroup}>
+    <text fill="black" fontSize="13.5">We Believe</text>
+  </g>
+</mask>
 
-// Page: Faculty page
-export default function FacultyPage({ faculty }: FacultyPageProps) {
-  return (
-    <>
-      <PageHeader title="Our Faculty" />
-      <FacultyGrid faculty={faculty} />
-    </>
-  );
-}
+<!-- White wall rectangle uses the mask -->
+<rect ref={wall} fill="rgba(255,255,255,1)" mask="url(#hero-mask)" />
 ```
 
-## Data Flow
-
-### Request Flow (Static Export)
-
-```
-[Build Time]
-    ↓
-[Content Source] → [Data Fetcher] → [Next.js Build] → [Static HTML/CSS/JS]
-    ↓                                                          ↓
-[Git/CMS]                                                  [CDN (Vercel/Netlify)]
-                                                               ↓
-                                                          [User Browser]
-```
-
-### Content Update Flow
-
-```
-[Editor Updates Content]
-    ↓
-[Git Commit / CMS Webhook]
-    ↓
-[Trigger Rebuild]
-    ↓
-[Next.js Build Process]
-    ↓
-[Deploy to CDN]
-    ↓
-[Updated Site Live]
-```
-
-### Key Data Flows
-
-1. **Build-time content fetching:** Content source (files/CMS) → Data fetcher → Next.js build → Static pages
-2. **Client-side dynamic content:** User loads page → Client-side fetch → External API (Google Calendar, WordPress) → Render dynamic content
-3. **Navigation data:** site-navigation.ts → Header component → Mega-menu rendering
-4. **Image optimization:** public/images/ → Next.js Image component → Optimized delivery (note: static export requires `unoptimized: true`)
-
-## Scaling Considerations
-
-| Scale | Architecture Adjustments |
-|-------|--------------------------|
-| 0-100 pages | Git-based CMS (TinaCMS/Decap), static JSON/MDX files, single build pipeline |
-| 100-500 pages | Consider headless CMS (Sanity/Contentful), implement incremental builds, add image CDN (Cloudinary) |
-| 500+ pages | Headless CMS required, split content types into separate build pipelines, implement preview modes, consider ISR if moving away from static export |
-
-### Scaling Priorities
-
-1. **First bottleneck:** Build time (>10 minutes). Fix: Incremental builds, split content types, optimize image processing.
-2. **Second bottleneck:** Content editor experience (slow CMS UI, complex workflows). Fix: Upgrade to headless CMS with better UX, implement preview modes.
-3. **Third bottleneck:** Image delivery (large file sizes, slow load times). Fix: Image CDN (Cloudinary, Imgix), WebP/AVIF formats, lazy loading.
-
-## Anti-Patterns
-
-### Anti-Pattern 1: Mixing Static and Server-Side Rendering
-
-**What people do:** Try to use server-side rendering (SSR) or API routes in a static export project.
-
-**Why it's wrong:** Next.js static export (`output: "export"`) doesn't support SSR, API routes, or ISR. Attempting to use these features will cause build failures.
-
-**Do this instead:** Use client-side data fetching for dynamic content, or move to a custom server deployment if SSR is required.
-
-### Anti-Pattern 2: Hardcoding Content in Components
-
-**What people do:** Put all content (text, images, links) directly in component files.
-
-**Why it's wrong:** Makes content updates require code changes, prevents non-technical editors from updating content, creates merge conflicts.
-
-**Do this instead:** Separate content from presentation. Store content in JSON/MDX files or a CMS, fetch at build time, pass as props to components.
+**Animation sequence:**
 
 ```typescript
-// WRONG: Hardcoded content
-export function Hero() {
-  return (
-    <section>
-      <h1>Welcome to St. Elizabeth High School</h1>
-      <p>Nurturing minds, hearts, and spirits since 1967.</p>
-    </section>
-  );
-}
+const heroTl = gsap.timeline({ paused: true });
+heroTl
+  .fromTo(textGroup, { scale: 60, transformOrigin: '50% 50%' }, { scale: 1, duration: 1, ease: 'power2.out' })
+  .to(wall, { fill: 'rgba(0,0,0,0.55)', duration: 1 }, 0);
+```
 
-// CORRECT: Content as props
-export function Hero({ heading, body }: HeroProps) {
-  return (
-    <section>
-      <h1>{heading}</h1>
-      <p>{body}</p>
-    </section>
-  );
+**Travel distance mapping:** Hero occupies the first 9% of horizontal track (1 of 9 sections). Animation fires during `progress <= 0.09` of parent scroll. After threshold, `hasAnimated` flag locks timeline.
+
+---
+
+### Pattern 4: Sticky Split Section (45:55 Content:Imagery)
+
+**What:** A two-column full-viewport section where left side holds text content (overline, heading, body, accordion) and right side displays a staggered grid of 4 images. Used for "Accolades" and "Mission" sections.
+
+**Component Props:**
+
+```typescript
+interface StickySplitSectionProps {
+  overline: string;
+  heading: string;
+  body: string;
+  accordion: Array<{ title: string; content: string }>;
+  leftImage?: string | null;               // Optional portrait cutout left of text
+  rightImages?: string[];                  // 4-image staggered grid
+  backgroundColor?: 'white' | 'light' | 'dark' | 'maroon';
 }
 ```
 
-### Anti-Pattern 3: Deep Component Nesting
+**Layout grid:**
 
-**What people do:** Create deeply nested component hierarchies (>5 levels) with props drilling through every level.
+```css
+display: grid;
+grid-template-columns: 45% 55%;
+height: 100vh;
+```
 
-**Why it's wrong:** Makes components hard to understand, test, and refactor. Props drilling creates tight coupling.
+**Image collage (right side):**
 
-**Do this instead:** Use composition, context API for shared state, or flatten the hierarchy by extracting intermediate components.
+```css
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 8px;
+row-gap: 24px;
+/* Images offset vertically using margin-top for stepped effect */
+.grid-img:nth-child(2n) { margin-top: 10%; }
+.grid-img:nth-child(3n) { margin-top: 20%; }
+```
 
-### Anti-Pattern 4: Ignoring Performance Budgets
+---
 
-**What people do:** Add large hero videos, unoptimized images, heavy JavaScript libraries without measuring impact.
+### Pattern 5: Full-Viewport Alternating Passions Panel
 
-**Why it's wrong:** School sites are often accessed on mobile devices with slow connections. Poor performance hurts SEO and user experience.
+**What:** Three full-screen sections (Athletics, Arts, Academics) with alternating background colors (maroon / white / dark) and a cutout image positioned left or right. The image has a subtle drop shadow for depth.
 
-**Do this instead:** Set performance budgets (LCP <2.5s, FID <100ms, CLS <0.1), optimize images (WebP, lazy loading), use video posters, measure with Lighthouse.
+**Component Props:**
 
-## Integration Points
-
-### External Services
-
-| Service | Integration Pattern | Notes |
-|---------|---------------------|-------|
-| **Google Calendar** | Client-side fetch via Google Calendar API | For events calendar. Requires API key. Free tier sufficient for most schools. |
-| **WordPress (Headless)** | Build-time fetch via WordPress REST API | If school already uses WordPress. Fetch posts/pages at build time. |
-| **Sanity/Contentful** | Build-time fetch via CMS SDK | For rich content management. Webhook triggers rebuild on content change. |
-| **Cloudinary/Imgix** | Image CDN for optimized delivery | For image optimization. Replace local images with CDN URLs. |
-| **Google Forms** | Embed via iframe or link | For admissions inquiries, contact forms. No backend required. |
-| **Payment Gateway** | External link to payment portal | For tuition payments. Don't build payment processing in-house. |
-
-### Internal Boundaries
-
-| Boundary | Communication | Notes |
-|----------|---------------|-------|
-| **Components ↔ Data Layer** | Props (build-time) or fetch (client-side) | Components receive data as props (static) or fetch client-side (dynamic). |
-| **Pages ↔ Sections** | Props | Pages compose sections, passing content as props. |
-| **Sections ↔ UI Components** | Props | Sections compose UI components, passing data and handlers. |
-| **Content Source ↔ Build** | File system reads or API calls | Build process fetches content from files or CMS API. |
-
-## Page Template Patterns
-
-### Landing Page (Home)
-
-**Structure:**
-- Hero section (full-screen, video/image background)
-- Value proposition (3-4 key benefits)
-- Social proof (awards, testimonials, rankings)
-- Divisions/Programs showcase (tabbed or grid)
-- News/Events preview (latest 3-4 items)
-- CTA section (schedule visit, apply now)
-
-**Existing components:** HeroMasked, ValueCarousel, StickySplitSection, DivisionsTabs, FooterCtaSection
-
-### Content Page (About, Academics, etc.)
-
-**Structure:**
-- Page header (title, breadcrumbs, hero image)
-- Body content (rich text, images, videos)
-- Sidebar (quick links, related pages, contact info)
-- CTA section (schedule visit, contact admissions)
-
-**New components needed:** PageHeader, RichTextContent, Sidebar, Breadcrumbs
-
-### Listing Page (News, Events, Faculty)
-
-**Structure:**
-- Page header (title, search/filter controls)
-- Grid/list of items (cards with image, title, excerpt, date)
-- Pagination or infinite scroll
-- Sidebar (categories, tags, archive)
-
-**New components needed:** ListingGrid, FilterControls, Pagination, CategorySidebar
-
-### Detail Page (News Article, Event, Faculty Profile)
-
-**Structure:**
-- Hero section (title, date, author, featured image)
-- Body content (rich text, images, videos)
-- Metadata (categories, tags, related items)
-- CTA section (back to listing, related items)
-
-**New components needed:** ArticleHeader, ArticleBody, RelatedItems
-
-## SEO Architecture
-
-### Structured Data (Schema.org)
-
-**Required schemas for school sites:**
-
-1. **LocalBusiness / EducationalOrganization:**
-```json
-{
-  "@context": "https://schema.org",
-  "@type": "EducationalOrganization",
-  "name": "St. Elizabeth High School",
-  "address": {
-    "@type": "PostalAddress",
-    "streetAddress": "123 School St",
-    "addressLocality": "Pomburpa",
-    "addressRegion": "State",
-    "postalCode": "12345"
-  },
-  "telephone": "+1-555-555-5555",
-  "url": "https://stelizabeth.edu"
+```typescript
+interface PassionsPanelProps {
+  bg: string;                    // CSS var (var(--color-primary-maroon), etc.)
+  textColor: string;             // On-primary or on-background
+  number: string;                // "01", "02", "03"
+  label: string;                 // Section title
+  description: string;
+  image: string;
+  imagePosition: 'left' | 'right';
 }
 ```
 
-2. **BreadcrumbList:** For navigation breadcrumbs on all pages
-3. **FAQPage:** For FAQ sections (admissions, general info)
-4. **Event:** For events calendar items
-5. **NewsArticle:** For news/blog posts
+**Layout:**
 
-### URL Structure
+```css
+display: flex;
+align-items: center;
+justify-content: center;
+gap: clamp(32px, 6vw, 80px);
+flex-direction: row | row-reverse; /* determined by imagePosition */
+```
 
-**Best practices:**
-- `/about/` — About section landing
-- `/about/mission/` — Specific about page
-- `/admission/` — Admissions landing
-- `/admission/apply/` — Application page
-- `/news/` — News listing
-- `/news/2026/spring-concert/` — News article (year + slug)
-- `/events/` — Events listing
-- `/events/2026-05-15-spring-concert/` — Event detail (date + slug)
+**Image styling:**
 
-**Rationale:** Hierarchical URLs improve SEO, user understanding, and breadcrumb generation.
+```css
+max-height: 60vh;
+max-width: 40%;
+filter: brightness(1.15) drop-shadow(0 20px 50px rgba(0,0,0,0.4)); /* for dark bg */
+```
 
-### Performance Patterns
+---
 
-**LCP Optimization (Largest Contentful Paint):**
-- Hero images: Use WebP format, optimize to <200KB, lazy load below-the-fold images
-- Hero videos: Use poster image, lazy load video, consider replacing with image on mobile
-- Fonts: Preload critical fonts, use `font-display: swap`
+### Pattern 6: Framer Motion Accordion (Single-Open)
 
-**Image CDN:**
-- Use Cloudinary or Imgix for automatic format conversion (WebP/AVIF), resizing, compression
-- Replace local images with CDN URLs: `https://res.cloudinary.com/school/image/upload/w_800,f_auto,q_auto/hero.jpg`
+**What:** Vertical accordion with single-panel-open behavior. Uses `AnimatePresence` for enter/exit animation with Walker easing `cubic-bezier(0.83, 0, 0.17, 1)` and 0.4s duration.
 
-**Build-time Optimization:**
-- Generate responsive image sizes at build time
-- Inline critical CSS for above-the-fold content
-- Code splitting: Lazy load non-critical components
+**Component Props:**
 
-## CMS Decision Matrix
+```typescript
+interface AccordionItem {
+  title: string;
+  content: string;
+}
+interface AccordionProps {
+  items: AccordionItem[];
+  className?: string;
+}
+```
 
-| Criteria | Git-based (TinaCMS) | Headless (Sanity) | WordPress Headless |
-|----------|---------------------|-------------------|-------------------|
-| **Cost** | Free | Free tier (3 users), $99/mo for 10 users | Free (self-hosted) or $25/mo (managed) |
-| **Ease of Use** | Medium (Git concepts) | High (intuitive UI) | High (familiar to many) |
-| **Setup Complexity** | Low | Medium | Medium |
-| **Content Editors** | 1-3 | 3-10+ | Unlimited |
-| **Media Management** | Basic (commit images) | Excellent (CDN, transforms) | Good (media library) |
-| **Preview Mode** | Yes (TinaCMS) | Yes (built-in) | Yes (with plugin) |
-| **Vendor Lock-in** | None (files in repo) | Medium (Sanity-specific) | Low (standard WordPress) |
-| **Build Time** | Fast (<5 min for <100 pages) | Fast (API fetch) | Medium (REST API can be slow) |
-| **Best For** | Small sites, technical teams | Medium-large sites, non-technical editors | Schools already using WordPress |
+**State:** `const [openIndex, setOpenIndex] = useState<number | null>(null);`
 
-**Recommendation for St. Elizabeth:**
-- **Start with Git-based CMS (TinaCMS)** if content volume is <100 pages and 1-3 editors
-- **Upgrade to Sanity** if content volume grows >100 pages or need >3 editors
-- **Use WordPress Headless** if school already has WordPress and wants to keep existing content
+**Animation:**
 
-## Existing Component Integration
+```typescript
+<motion.div
+  initial={{ height: 0, opacity: 0 }}
+  animate={{ height: 'auto', opacity: 1 }}
+  exit={{ height: 0, opacity: 0 }}
+  transition={{ duration: 0.4, ease: [0.83, 0, 0.17, 1] }}
+  style={{ overflow: 'hidden' }}
+>
+  <p>{content}</p>
+</motion.div>
+```
 
-**Current components map to architectural layers:**
+---
 
-| Component | Layer | Purpose | Integration Notes |
-|-----------|-------|---------|-------------------|
-| **WalkHeader** | Layout | Global navigation with ghost nav behavior | Already integrated, works across all pages |
-| **HeroMasked** | Section (Organism) | Landing page hero with SVG clip-path | Reusable for other landing pages with different images/text |
-| **ValueCarousel** | Section (Organism) | Horizontal scroll showcase | Reusable for any carousel content (values, programs, testimonials) |
-| **StickySplitSection** | Section (Organism) | 45:55 sticky split with accordion | Reusable for about pages, program pages, mission pages |
-| **DivisionsTabs** | Section (Organism) | Tabbed showcase for divisions/programs | Reusable for any tabbed content (programs, services, offerings) |
-| **FooterCtaSection** | Section (Organism) | Full-width CTA with background image | Reusable for all pages as final CTA |
-| **Button** | UI (Atom) | Reusable button component | Use across all sections and pages |
-| **Accordion** | UI (Molecule) | Collapsible content | Used in StickySplitSection, reusable for FAQs |
+### Pattern 7: Ghost Nav Header with Mega-Menu
 
-**Extension strategy:**
-1. **Create page templates** that compose existing sections (LandingPage, ContentPage, ListingPage)
-2. **Add new sections** for missing content types (FacultyGrid, EventsCalendar, NewsListing)
-3. **Extract UI components** from existing sections (Card, Modal, SearchBar)
-4. **Implement data layer** (content fetching utilities, type definitions)
+**What:** Transparent header at page top that becomes solid white with shadow when user scrolls (vertical > 10% OR horizontal > 5%). Dropdown menus on hover (desktop) and full-screen overlay (mobile).
+
+**State:**
+
+```typescript
+const [scrolled, setScrolled] = useState(false);
+const [mobileOpen, setMobileOpen] = useState(false);
+const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+```
+
+**Desktop Mega-Menu:**
+
+```typescript
+{mouse hover on nav item} → setHoveredItem(item.href)
+{motion.div} with initial={{ opacity: 0, y: 8 }} → animate={{ opacity: 1, y: 0 }}
+Position: absolute, top: calc(100% + 16px), left: 50%, transform: translateX(-50%)
+```
+
+**Mobile Full-Screen Overlay:**
+
+```typescript
+<AnimatePresence>
+  {mobileOpen && (
+    <motion.div
+      initial={{ x: '100%' }}
+      animate={{ x: 0 }}
+      exit={{ x: '100%' }}
+      transition={{ duration: 0.4, ease: [0.83, 0, 0.17, 1] }}
+      style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#fff' }}
+    >
+      {/* Nav links with nested sub-items as accordion */}
+    </motion.div>
+  )}
+</AnimatePresence>
+```
+
+---
+
+### Pattern 8: Design Token System (Walker SOP-001)
+
+**Location:** `src/app/globals.css`
+
+**Token categories:**
+
+```css
+:root {
+  /* Colors (WCAG 2.1 AAA) */
+  --color-primary-maroon: #6C1F35;
+  --color-secondary-maroon: #4A1524;
+  --color-deep-maroon: #2E0D1A;
+  --color-white: #FFFFFF;
+  --color-offwhite: #F9F9F9;
+  --color-gray: #555555;
+  --color-text-main: #1A1A1A;
+  --color-text-dark: #000000;
+
+  /* Easing (SOP-001) */
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-in-out-quint: cubic-bezier(0.83, 0, 0.17, 1);
+  --ease-smooth: cubic-bezier(0.25, 1, 0.5, 1);
+
+  /* Layout */
+  --container-max: 1440px;
+  --section-padding-y: clamp(4rem, 10vw, 12rem);
+  --container-padding: clamp(24px, 4vw, 60px);
+
+  /* Font variables (next/font/google) */
+  --font-display: var(--font-playfair);
+  --font-heading: var(--font-montserrat);
+  --font-body: var(--font-inter);
+}
+```
+
+**Tailwind utilities mapped:**
+
+```css
+.walker-heading { font-family: var(--font-heading); font-weight: 800; font-size: clamp(2rem, 4vw, 4.5rem); line-height: 1; letter-spacing: -0.02em; }
+.walker-body { font-family: var(--font-body); font-size: 1.25rem; line-height: 1.6; }
+.text-overline { font-weight: 700; font-size: clamp(0.75rem, 1vw, 0.875rem); letter-spacing: 0.15em; text-transform: uppercase; }
+```
+
+---
+
+## Scalability Considerations
+
+### At 100 Users/Day
+- Static hosting on free tier (Netlify/GitHub Pages) is sufficient
+- Formspree free tier (50 submissions/month) could be limiting; monitor closely
+- No performance tuning needed — LCP naturally under 2s on wired connections
+
+### At 10K Users/Day
+- Upgrade to Netlify Pro or Vercel Pro ($20–50/month) for build minutes and CDN edge
+- Formspree paid tier ($10–30/month) for higher volume
+- Enable lazy loading for all below-fold images (currently not done)
+- Consider adding a CDN (Cloudflare) for additional caching layer
+
+### At 1M Users/Day
+- Static + CDN still works (Vercel Enterprise or self-hosted on Cloudflare Pages)
+- Bandwidth costs rise (~$200–500/month for 5–10TB/month depending on host)
+- Must enable HTTP/2 push for critical assets; implement image optimization pipeline (Cloudinary/Imgix)
+- Consider adding a lightweight serverless form handler (AWS Lambda + SES) instead of Formspree to avoid per-submission costs
+
+---
 
 ## Sources
 
-- Next.js Static Export Documentation (Context7: /vercel/next.js)
-- Atomic Design Methodology (Brad Frost)
-- School Website Best Practices (WebSearch: school website architecture patterns 2026)
-- Headless CMS Comparison (WebSearch: headless CMS comparison schools education 2026)
-- SEO Structured Data (Google Search Central: structured data for education)
-- Performance Optimization (Web.dev: Core Web Vitals)
-
----
-*Architecture research for: St. Elizabeth High School Website*
-*Researched: 2026-04-27*
+- `src/app/page.tsx` — Horizontal scroll-jacking architecture (container height calculation, GSAP setup)
+- `src/components/sections/HeroMasked.tsx` — SVG mask pattern + custom event subscription
+- `src/components/layout/WalkHeader.tsx` — Ghost nav + mega-menu + mobile overlay
+- `src/lib/hooks/useHorizontalScroll.ts` — ScrollTrigger config (scrub, pin, anticipatePin)
+- `src/app/globals.css` — Walker design token system (SOP-001)
+- `.planning/codebase/ARCHITECTURE.md` — Layer definitions and data flow
+- GSAP ScrollTrigger documentation patterns for pin + scrub + nested triggers

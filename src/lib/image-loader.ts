@@ -1,4 +1,4 @@
-export default function imageLoader({ src, width, quality }: {
+export default function imageLoader({ src, width }: {
   src: string;
   width: number;
   quality?: number;

@@ -301,7 +301,7 @@ export default function ArtsPage() {
             style={{ fontSize: 18, lineHeight: 1.7, color: 'rgba(255,255,255,0.9)', marginBottom: 24 }}
           >
             At St. Elizabeth, we believe that creating art is a form of prayer — a way of
-            participating in God's creative work and reflecting His beauty. Our arts programs
+            participating in God&apos;s creative work and reflecting His beauty. Our arts programs
             integrate faith and creativity, helping students see their artistic gifts as a calling
             to serve others and glorify God through beauty, truth, and excellence.
           </p>

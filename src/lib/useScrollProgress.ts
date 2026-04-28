@@ -60,8 +60,6 @@ export function useElementScrollProgress(
     const target = elementRef.current;
     if (!target) return;
 
-    const container = containerRef?.current || window;
-
     const handleScroll = () => {
       if (!target) return;
 

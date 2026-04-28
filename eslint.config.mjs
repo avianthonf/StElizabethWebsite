@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    ".claude/**",
+    "tmp/**",
+    "scripts/inspect-value-section.mjs",
+    "scripts/optimize-images.cjs",
+    "screenshot.js",
   ]),
 ]);
 

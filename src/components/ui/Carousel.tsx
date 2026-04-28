@@ -49,8 +49,12 @@ export function Carousel({
 
   useEffect(() => {
     if (!emblaApi) return;
-    onSelect();
-    setScrollSnaps(emblaApi.scrollSnapList());
+
+    queueMicrotask(() => {
+      setScrollSnaps(emblaApi.scrollSnapList());
+      onSelect();
+    });
+
     emblaApi.on('select', onSelect);
     emblaApi.on('reInit', onSelect);
 
@@ -71,7 +75,7 @@ export function Carousel({
           <button
             onClick={scrollPrev}
             disabled={!canScrollPrev}
-            className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-lg transition hover:bg-white disabled:opacity-30"
+            className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-[2px] bg-white/92 p-2.5 shadow-[0_14px_32px_rgba(0,0,0,0.12)] transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] hover:scale-[1.04] hover:bg-white disabled:cursor-default disabled:opacity-30 disabled:hover:scale-100"
             aria-label="Previous slide"
           >
             <ChevronLeft className="h-6 w-6 text-zinc-900" />
@@ -79,7 +83,7 @@ export function Carousel({
           <button
             onClick={scrollNext}
             disabled={!canScrollNext}
-            className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-lg transition hover:bg-white disabled:opacity-30"
+            className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-[2px] bg-white/92 p-2.5 shadow-[0_14px_32px_rgba(0,0,0,0.12)] transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] hover:scale-[1.04] hover:bg-white disabled:cursor-default disabled:opacity-30 disabled:hover:scale-100"
             aria-label="Next slide"
           >
             <ChevronRight className="h-6 w-6 text-zinc-900" />
@@ -93,8 +97,10 @@ export function Carousel({
             <button
               key={index}
               onClick={() => scrollTo(index)}
-              className={`h-2 w-2 rounded-full transition ${
-                index === selectedIndex ? 'bg-maroon w-8' : 'bg-zinc-300'
+              className={`h-2 rounded-full transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] ${
+                index === selectedIndex
+                  ? 'w-8 scale-110 bg-maroon shadow-[0_6px_18px_rgba(94,22,36,0.18)]'
+                  : 'w-2 bg-zinc-300 hover:bg-zinc-400'
               }`}
               aria-label={`Go to slide ${index + 1}`}
             />

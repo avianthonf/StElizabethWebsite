@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { ContentPage, PageHero } from '@/components/templates/ContentPage';
-import { StickySplitSection } from '@/components/sections/StickySplitSection';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 
 export const metadata: Metadata = {
@@ -173,9 +172,9 @@ export default function AboutPage() {
             className="walker-body"
             style={{ fontSize: 18, lineHeight: 1.7, color: 'rgba(255,255,255,0.9)', marginBottom: 24 }}
           >
-            "At St. Elizabeth High School, we believe that every student is a gift from God with
+            &ldquo;At St. Elizabeth High School, we believe that every student is a gift from God with
             unique talents and potential. Our mission is to help each student discover their gifts,
-            develop their abilities, and use them in service to others."
+            develop their abilities, and use them in service to others.&rdquo;
           </p>
           <p style={{ fontSize: 16, fontWeight: 600, letterSpacing: '0.05em' }}>
             — [Principal Name], Principal

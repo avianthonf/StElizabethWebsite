@@ -145,7 +145,10 @@ test.describe('Scroll Animations', () => {
     if (pageInfo.canScroll) {
       // Try to scroll using Lenis if available, otherwise use native scroll
       await page.evaluate(() => {
-        const lenis = (window as any).lenis;
+        const browserWindow = window as Window & {
+          lenis?: { scrollTo: (target: number, options?: { immediate?: boolean }) => void };
+        };
+        const lenis = browserWindow.lenis;
         if (lenis && typeof lenis.scrollTo === 'function') {
           lenis.scrollTo(800, { immediate: true });
         } else {
@@ -182,16 +185,17 @@ test.describe('Scroll Animations', () => {
 
     // Monitor performance during scroll
     await page.evaluate(() => {
-      (window as any).scrollFrames = [];
+      const browserWindow = window as unknown as Window & { scrollFrames: number[] };
+      browserWindow.scrollFrames = [];
       let lastTime = performance.now();
 
       const measureFrame = () => {
         const currentTime = performance.now();
         const delta = currentTime - lastTime;
-        (window as any).scrollFrames.push(delta);
+        browserWindow.scrollFrames.push(delta);
         lastTime = currentTime;
 
-        if ((window as any).scrollFrames.length < 60) {
+        if (browserWindow.scrollFrames.length < 60) {
           requestAnimationFrame(measureFrame);
         }
       };
@@ -207,7 +211,10 @@ test.describe('Scroll Animations', () => {
     await page.waitForTimeout(2000); // Wait for scroll to complete
 
     // Check frame times
-    const frames = await page.evaluate(() => (window as any).scrollFrames);
+    const frames = await page.evaluate(() => {
+      const browserWindow = window as Window & { scrollFrames?: number[] };
+      return browserWindow.scrollFrames ?? [];
+    });
 
     // Verify we captured frames
     expect(frames.length).toBeGreaterThan(0);
@@ -220,5 +227,44 @@ test.describe('Scroll Animations', () => {
     // Allow up to 70% frames above 60fps in test environment
     // The key is that animations run without crashing or freezing
     expect(verySlowPercentage).toBeLessThan(70);
+  });
+
+  test('We Value carousel renders as controlled horizontal rail (visual regression)', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForTimeout(1500);
+
+    // Locate the We Value section
+    const heading = page.locator('h2:has-text("We Value")');
+    await expect(heading).toBeVisible();
+
+    const box = await heading.boundingBox();
+    expect(box).not.toBeNull();
+
+    // Capture screenshot for visual inspection
+    if (box) {
+      await page.screenshot({
+        path: `tmp/debug-value-carousel-${Date.now()}.png`,
+        clip: { x: 0, y: box.y - 60, width: 1440, height: 700 }
+      });
+    }
+
+    // Verify carousel container is present
+    const carousel = page.locator('.values-carousel');
+    await expect(carousel).toBeVisible();
+
+    // Verify carousel has slides (Embla [role="group"])
+    const slides = page.locator('[role="group"]');
+    const slideCount = await slides.count();
+    expect(slideCount).toBeGreaterThan(0);
+
+    // Verify cards have rendered with content
+    const cardImages = page.locator('.value-card img, img[class*="value"]');
+    const imageCount = await cardImages.count();
+    expect(imageCount).toBeGreaterThan(0);
+
+    // Verify value titles are visible
+    const titles = page.locator('h3');
+    const titleCount = await titles.count();
+    expect(titleCount).toBeGreaterThan(0);
   });
 });

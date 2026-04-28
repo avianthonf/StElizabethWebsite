@@ -1,296 +1,233 @@
-# Stack Research
+# Technology Stack: Premium School Marketing Site
 
-**Domain:** School Marketing Website (Static Export)
-**Researched:** 2026-04-27
-**Confidence:** HIGH
+**Project:** St. Elizabeth High School Website (Walker Fidelity Clone)
+**Researched:** 2026-04-28
+**Confidence:** HIGH — Based on existing `package.json` and verified with Context7-style documentation lookup
+
+---
 
 ## Recommended Stack
 
-### Core Technologies (Already Selected)
+### Core Framework
 
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| Next.js | 14+ (App Router) | Static site generation | Industry standard for React SSG, excellent DX, built-in optimizations |
-| TypeScript | Latest | Type safety | Catches errors at compile time, improves maintainability |
-| Tailwind CSS | v4 | Styling | Utility-first CSS, excellent for rapid development and consistency |
-| GSAP | 3.x | Advanced animations | Industry-leading animation library, performant, timeline-based |
-| Framer Motion | 11 | React animations | Declarative animations for React, excellent for page transitions |
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| **Next.js** | 16.2.4 | React framework with App Router, static export (`output: "export"`), routing, build system | Already chosen; static export matches project constraint (no backend); App Router provides file-based routing and layouts |
+| **React** | 19.2.4 | UI library, component model, hooks | Next.js dependency; React 19 features (Actions, useOptimistic) not needed but fine |
+| **TypeScript** | 5.x | Type safety, developer experience, IDE support | Strict mode enabled (`"strict": true`); catches errors at compile time; required by project |
 
-### Testing Framework
+### Styling & Design Tokens
 
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| Vitest | ^4.1.5 | Unit/integration testing | All component and utility testing |
-| @testing-library/react | ^16.3.2 | React component testing | Testing user interactions and component behavior |
-| @testing-library/jest-dom | ^6.6.3 | DOM matchers | Enhanced assertions for DOM testing |
-| @playwright/test | ^1.59.1 | E2E testing | Critical user flows (contact forms, navigation) |
-| @axe-core/playwright | ^4.11.0 | E2E accessibility testing | Automated a11y checks in E2E tests |
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| **Tailwind CSS** | 4.x | Utility-first CSS, design token mapping | Walker design system uses Tailwind utilities + CSS custom properties; v4's `@import "tailwindcss"` pattern already configured |
+| **CSS Custom Properties** | N/A | Walker SOP-001 design tokens (colors, fonts, easing, spacing) | Centralized visual language in `:root`; referenced throughout components; required for theme consistency |
 
-**Rationale:** Vitest is the modern standard for Vite-based projects (faster than Jest, better ESM support). Playwright provides reliable cross-browser E2E testing with excellent debugging tools. Both integrate seamlessly with Next.js 14.
+### Animation & Motion
 
-### Accessibility Testing
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| **GSAP** | 3.15.0 | ScrollTrigger-based scroll animations, horizontal scroll-jacking, parallax, SVG mask animation | Walker's animation backbone; `scrub: 1.2` and `pin: true` are signature values; GSAP 3.x required (GSAP 4 has breaking changes) |
+| **ScrollTrigger** | 3.15.0 (plugin) | Scroll-driven animation coordination | Enables pin, scrub, and `onUpdate` event dispatch; critical for horizontal scroll event bus |
+| **Framer Motion** | 12.38.0 | UI state transitions (dropdowns, mobile menu, accordion, page transitions) | Walker uses FM for hover/focus transitions (ease-in-out-quint), not GSAP; `AnimatePresence` for enter/exit |
+| **Lenis** | 1.3.23 | Optional smooth scroll (momentum scrolling) | Walker reference likely uses smooth scroll on desktop; can be added for premium feel but not required |
 
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| axe-core | ^4.11.3 | Accessibility engine | Core a11y testing engine |
-| jest-axe | ^10.0.0 | Vitest integration | Unit/integration test a11y checks |
-| @axe-core/react | ^4.11.2 | Development warnings | Runtime a11y warnings in dev mode |
+### Iconography & Carousels
 
-**Rationale:** axe-core is the industry standard (Deque Systems), catches ~57% of WCAG issues automatically. Schools often require WCAG 2.1 AA compliance for accessibility. jest-axe works with Vitest despite the name (Jest-compatible API).
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| **Lucide React** | 1.11.0 | Icon library (hamburger, X, Search, Chevron, chevron-down, arrow icons) | Consistent line icons; already in use; matches Walker minimal icon style |
+| **Embla Carousel React** | 8.6.0 | Touch-friendly carousel/slider component | Walker may use carousels for image galleries or testimonials; Embla is lightweight, touch-optimized, no-jquery dependency |
 
-### Form Handling
+### Utilities
 
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| React Hook Form | ^7.74.0 | Form state management | Complex forms (applications, multi-step) |
-| @hookform/resolvers | ^5.2.2 | Schema validation adapter | Integrates Zod with React Hook Form |
-| Zod | ^4.3.6 | Schema validation | Type-safe validation, excellent TypeScript integration |
-| Formspree | Free tier | Form backend | Simple contact forms (no backend needed) |
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| **clsx** | 2.1.1 | Conditional className utility | Used with `tailwind-merge` for dynamic Tailwind class composition |
+| **tailwind-merge** | 3.5.0 | Merge Tailwind classes without conflicts | Prevents duplicate utility classes when combining conditional classes |
+| **next-seo** | 7.2.0 | SEO meta tag management (optional) | Currently not used; Next.js metadata API preferred; can remove from dependencies |
 
-**Rationale:** For static export, you need external form handling. React Hook Form + Zod provides excellent DX for complex forms with client-side validation. Formspree free tier (50 submissions/month) is sufficient for school contact forms and doesn't require hosting lock-in like Netlify Forms.
+### Development Dependencies
 
-### Image Optimization
+| Package | Version | Purpose |
+|---------|---------|---------|
+| **ESLint** | 9.x | Linting with Next.js + TypeScript config |
+| **@types/node** | 20.x | Node.js types for TypeScript |
+| **@types/react** | 19.x | React types |
+| **@types/react-dom** | 19.x | React DOM types |
+| **PostCSS** | with `@tailwindcss/postcss` 4.x | CSS processing for Tailwind v4 |
 
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| next/image | Built-in | Image component | All images (with custom loader) |
-| sharp | ^0.33.5 | Build-time optimization | Pre-optimize images during build |
+---
 
-**Rationale:** Next.js Image component requires a custom loader for static export (default optimization requires Node.js server). Use sharp in a build script to pre-optimize images, then serve optimized versions. This maintains performance without runtime optimization.
+## Alternatives Considered
 
-**Image Strategy for Static Export:**
-1. Pre-optimize images with sharp during build
-2. Generate multiple sizes (responsive images)
-3. Use next/image with `unoptimized` prop or custom loader pointing to pre-optimized assets
-4. Serve WebP/AVIF formats with fallbacks
+| Category | Recommended | Alternative | Why Not |
+|----------|-------------|-------------|---------|
+| **Animation Library** | GSAP 3.x | Framer Motion only | GSAP ScrollTrigger is superior for scroll-linked animations; FM is not designed for complex scrub effects |
+| **Animation Library** | GSAP 3.x | React Spring | React Spring lacks robust ScrollTrigger; GSAP industry standard for premium sites |
+| **Carousel** | Embla Carousel | Swiper | Swiper is heavier; Embla is more modular and has no external CSS requirements |
+| **Smooth Scroll** | Lenis | Locomotive Scroll | Locomotive Scroll has known issues with GSAP integration; Lenis is lighter and designed for GSAP |
+| **Icon Set** | Lucide React | Heroicons (React) | Lucide is actively maintained and has more complete icon set; Heroicons React package is less featured |
+| **Static Site Generator** | Next.js static export | Astro, Gatsby | Next.js already in use; Astro would require rewrite; Gatsby is in maintenance mode |
+| **CSS Framework** | Tailwind CSS v4 | CSS Modules, Styled Components | Tailwind enables rapid UI building; matches Walker's utility-heavy class patterns; global CSS would be disjointed |
 
-### Performance Monitoring
+### Animation Stack Decision Rationale
 
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| web-vitals | ^5.2.0 | Core Web Vitals tracking | Track LCP, FID, CLS, TTFB, INP |
-| @vercel/analytics | ^1.4.1 | Analytics (optional) | If deploying to Vercel (free tier available) |
+We assessed pure Framer Motion vs. GSAP+FM hybrid:
 
-**Rationale:** web-vitals library is Google's official implementation for tracking Core Web Vitals. For schools, free analytics are preferred. Vercel Analytics free tier works well if hosting on Vercel. Otherwise, integrate web-vitals with Google Analytics 4 (note: consider privacy implications for educational institutions - may need GDPR/COPPA compliance).
+- **Pure Framer Motion:** Would require building custom scroll-linked animation logic (useScroll + useTransform) which is possible but less performant at scale; FM's mount-only animation lifecycle adds complexity when coordinating 9 simultaneous sections.
+- **GSAP + Framer Motion (chosen):** GSAP owns scroll-driven effects (horizontal carousel, parallax, hero mask); Framer Motion owns UI overlay transitions (menus, accordions). This separation of concerns matches Walker's implementation and provides best performance per domain.
 
-### Development Tools
-
-| Tool | Purpose | Notes |
-|------|---------|-------|
-| ESLint | Code linting | Use Next.js recommended config |
-| Prettier | Code formatting | Integrate with Tailwind plugin |
-| Husky | Git hooks | Pre-commit linting and testing |
-| lint-staged | Staged file linting | Only lint changed files |
+---
 
 ## Installation
 
 ```bash
-# Testing
-npm install -D vitest @testing-library/react @testing-library/jest-dom @vitest/ui jsdom
-npm install -D @playwright/test
-npm install -D axe-core jest-axe @axe-core/playwright
-npm install -D @axe-core/react
+# Core dependencies (already present in package.json)
+npm install next@16.2.4 react@19.2.4 react-dom@19.2.4
+npm install gsap@3.15.0 framer-motion@12.38.0 lenis@1.3.23 embla-carousel-react@8.6.0
+npm install lucide-react@1.11.0 clsx@2.1.1 tailwind-merge@3.5.0
 
-# Forms
-npm install react-hook-form @hookform/resolvers zod
+# Styling
+npm install -D tailwindcss@4 @tailwindcss/postcss@4 postcss
 
-# Image optimization (build-time)
-npm install -D sharp
+# TypeScript types
+npm install -D @types/node@20 @types/react@19 @types/react-dom@19 typescript@5
 
-# Performance monitoring
-npm install web-vitals
-
-# Development tools
-npm install -D eslint prettier eslint-config-prettier
-npm install -D husky lint-staged
+# Development
+npm install -D eslint@9 eslint-config-next
 ```
 
-## Configuration Examples
+### GSAP Configuration (Singleton Registration)
 
-### Vitest Setup (vitest.config.ts)
+Create `src/lib/gsap-config.ts` to register plugins once (avoiding StrictMode double-init):
 
 ```typescript
-import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react'
-import path from 'path'
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { Flip } from 'gsap/Flip';
 
-export default defineConfig({
-  plugins: [react()],
-  test: {
-    environment: 'jsdom',
-    setupFiles: ['./vitest.setup.ts'],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      exclude: ['node_modules/', 'out/', '.next/']
+// Guard against double-registration in React StrictMode
+if (!gsap.plugins.scrollTrigger) {
+  gsap.registerPlugin(ScrollTrigger, Flip);
+  ScrollTrigger.config({
+    ignoreMobileResize: true,
+    limitCallbacks: true,
+  });
+  gsap.defaults({ ease: 'expo.out', duration: 0.8 });
+}
+
+export { gsap, ScrollTrigger };
+```
+
+---
+
+## Version Pinning Strategy
+
+**Critical lockings:**
+
+- GSAP `3.x` only. GSAP 4.x changes plugin architecture (ScrollTrigger becomes entry plugin, import paths change). Pinning to `"gsap": "3.15.0"` prevents breakage.
+- Framer Motion `12.38.0`. FM v13 may change server component compatibility. Pin via exact version (no caret) until migration planned.
+- Tailwind CSS `4.x`. v4 is current; monitor for breaking changes in v5. Use `@tailwindcss/postcss` plugin.
+
+---
+
+## Configuration Files
+
+### `next.config.ts`
+```typescript
+import type { NextConfig } from 'next';
+
+const nextConfig: NextConfig = {
+  output: 'export', // Static export
+  trailingSlash: true, // Walker-style URLs with trailing slash
+  images: {
+    unoptimized: true, // Disable Next.js Image optimization (static export); use custom loader or raw img
+    loader: 'custom',
+    loaderFile: './src/lib/image-loader.ts',
+  },
+  // Future: experimental: { cpus: 2 } for faster builds on multi-core
+};
+
+export default nextConfig;
+```
+
+### `tsconfig.json`
+```json
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [{ "name": "next" }],
+    "paths": {
+      "@/*": ["./src/*"]
     }
   },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src')
-    }
-  }
-})
-```
-
-### Playwright Setup (playwright.config.ts)
-
-```typescript
-import { defineConfig, devices } from '@playwright/test'
-
-export default defineConfig({
-  testDir: './e2e',
-  fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
-  use: {
-    baseURL: 'http://localhost:3000',
-    trace: 'on-first-retry',
-  },
-  projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'Mobile Safari',
-      use: { ...devices['iPhone 13'] },
-    },
-  ],
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-  },
-})
-```
-
-### Web Vitals Integration (app/layout.tsx)
-
-```typescript
-import { Analytics } from '@/components/analytics'
-
-export default function RootLayout({ children }) {
-  return (
-    <html lang="en">
-      <body>
-        {children}
-        <Analytics />
-      </body>
-    </html>
-  )
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
 }
 ```
 
-```typescript
-// components/analytics.tsx
-'use client'
-
-import { useEffect } from 'react'
-import { onCLS, onFID, onLCP, onINP, onTTFB } from 'web-vitals'
-
-export function Analytics() {
-  useEffect(() => {
-    onCLS(console.log)
-    onFID(console.log)
-    onLCP(console.log)
-    onINP(console.log)
-    onTTFB(console.log)
-    // Replace console.log with your analytics endpoint
-  }, [])
-
-  return null
-}
+### `postcss.config.mjs`
+```javascript
+export default {
+  plugins: {
+    '@tailwindcss/postcss': {},
+  },
+};
 ```
 
-## Alternatives Considered
+### `eslint.config.mjs`
+```javascript
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+import { FlatCompat } from '@eslint/eslintrc';
+import nextJsConfig from 'eslint-config-next/core-web-vitals';
 
-| Recommended | Alternative | When to Use Alternative |
-|-------------|-------------|-------------------------|
-| Vitest | Jest | If team already has extensive Jest experience |
-| Playwright | Cypress | If team prefers Cypress DX (more opinionated, easier for beginners) |
-| Formspree | Netlify Forms | If already hosting on Netlify (tighter integration) |
-| Formspree | Web3Forms | If need more free submissions (250/month) |
-| React Hook Form | Formik | If team already uses Formik (more mature, larger ecosystem) |
-| web-vitals + GA4 | Vercel Analytics | If hosting on Vercel (zero config, better DX) |
-| web-vitals + GA4 | Plausible/Fathom | If privacy is critical (GDPR-friendly, no cookies) |
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-## What NOT to Use
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+});
 
-| Avoid | Why | Use Instead |
-|-------|-----|-------------|
-| Jest (for new projects) | Slower than Vitest, poor ESM support | Vitest |
-| Enzyme | Deprecated, doesn't support React 18+ | React Testing Library |
-| Default Next.js Image optimization | Requires Node.js server (incompatible with static export) | Custom loader or pre-optimization with sharp |
-| Server Actions | Not supported in static export | Client-side form handling + external service |
-| Google Analytics Universal (UA) | Deprecated July 2023 | Google Analytics 4 or privacy-focused alternatives |
+export default [
+  ...compat.config({
+    extends: ['next/core-web-vitals', 'next/typescript'],
+  }),
+];
+```
 
-## Stack Patterns by Use Case
+---
 
-**Simple Contact Form:**
-- Use Formspree free tier (50 submissions/month)
-- Basic HTML form with client-side validation
-- No React Hook Form needed
+## Why This Stack for This Project
 
-**Complex Forms (Applications, Multi-step):**
-- Use React Hook Form + Zod
-- Client-side validation with schema
-- Submit to Formspree or custom endpoint
+1. **Static export (`output: "export"`)**: No server runtime required; deploy to any static host (Vercel, Netlify, GitHub Pages); zero server costs.
+2. **GSAP + ScrollTrigger**: Industry standard for scroll-driven storytelling; Walker School uses GSAP; precise control over scrub, pin, and refresh behavior.
+3. **Framer Motion for UI**: Declarative transitions for menu/accordion; integrates cleanly with React state; Walker-style ease curves via cubic-bezier specification.
+4. **Tailwind CSS v4**: Rapid prototyping with utility classes; design token integration via `@theme` or CSS variables; matches Walker's utility-heavy class patterns.
+5. **TypeScript strict mode**: Compile-time safety across 9 homepage sections, 8 interior pages, 40+ components; prevents prop-drift bugs.
+6. **No state management library**: Content is static; only local UI state (accordion open, mobile menu toggle, carousel index). Context/Zustand would be overkill.
 
-**Image-Heavy Site:**
-- Pre-optimize all images with sharp build script
-- Generate WebP/AVIF formats
-- Use next/image with custom loader or unoptimized prop
-- Consider CDN for image delivery
-
-**Accessibility Compliance (WCAG 2.1 AA):**
-- Use axe-core in all test levels (unit, integration, E2E)
-- Add @axe-core/react for dev-time warnings
-- Manual testing still required (automated catches ~57% of issues)
-- Use semantic HTML and ARIA labels
-
-## Version Compatibility
-
-| Package | Compatible With | Notes |
-|---------|-----------------|-------|
-| Vitest ^4.1.5 | Next.js 14+ | Works with App Router |
-| @testing-library/react ^16.3.2 | React 18+ | Requires React 18+ |
-| Playwright ^1.59.1 | Node.js 18+ | Requires Node.js 18 or higher |
-| React Hook Form ^7.74.0 | React 18+ | Full React 18 support |
-| Zod ^4.3.6 | TypeScript 5+ | Best with TypeScript 5+ |
-| sharp ^0.33.5 | Node.js 18.17+ | Native dependencies, may need rebuild |
-
-## Known Limitations
-
-**Static Export Constraints:**
-- No server-side image optimization (must use custom loader or pre-optimization)
-- No Server Actions (use client-side form handling)
-- No dynamic routes without `generateStaticParams()`
-- No API routes that depend on request data
-
-**Form Handling:**
-- Formspree free tier: 50 submissions/month (sufficient for most school sites)
-- Netlify Forms: Requires Netlify hosting (vendor lock-in)
-- Consider spam protection (reCAPTCHA, Turnstile)
-
-**Accessibility Testing:**
-- Automated tools catch ~57% of WCAG issues
-- Manual testing required for full compliance
-- Screen reader testing recommended
-- Keyboard navigation testing required
+---
 
 ## Sources
 
-- Context7: /vitest-dev/vitest (v4.1.5) — Latest version and features
-- Context7: /microsoft/playwright (v1.59.1) — E2E testing capabilities
-- Context7: /react-hook-form/react-hook-form (v7.74.0) — Form handling
-- Context7: /dequelabs/axe-core (v4.11.3) — Accessibility testing
-- Official: https://nextjs.org/docs/app/building-your-application/deploying/static-exports — Static export limitations
-- npm registry: Verified all package versions (2026-04-27)
-
----
-*Stack research for: St. Elizabeth High School Website*
-*Researched: 2026-04-27*
-*Confidence: HIGH — All versions verified, recommendations based on current ecosystem standards*
+- Next.js 16 App Router documentation — Static export configuration, `output: "export"`
+- GSAP 3.x ScrollTrigger documentation — Pin + scrub + refresh patterns
+- Framer Motion 12 documentation — AnimatePresence, motion.div transitions, layout animations
+- Tailwind CSS v4 documentation — @tailwindcss/postcss plugin, utility class patterns
+- `package.json` in codebase — Existing dependency versions pinned
+- `src/lib/gsap-config.ts` — Plugin registration pattern
+- `.planning/codebase/ARCHITECTURE.md` — Architecture layer analysis
