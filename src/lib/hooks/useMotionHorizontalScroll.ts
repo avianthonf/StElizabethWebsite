@@ -7,10 +7,16 @@ export function useMotionHorizontalScroll() {
   const containerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const [travelDistance, setTravelDistance] = useState(0);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Wait for hydration before attaching scroll listener
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Track scroll progress through the tall container
   const { scrollYProgress } = useScroll({
-    target: containerRef,
+    target: isMounted ? containerRef : undefined,
     offset: ["start start", "end end"]
   });
 
