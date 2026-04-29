@@ -1,8 +1,5 @@
 'use client';
 
-// TODO: Replace FORMSPREE_ENDPOINT with actual URL from Formspree dashboard
-// See user_setup in 03-02-PLAN.md for instructions
-
 import { useState, useRef, FormEvent } from 'react';
 import { ContentPage, PageHero } from '@/components/templates/ContentPage';
 import { validateAdmissionsForm, isHoneypotFilled, type AdmissionsFormData, type FormErrors } from '@/lib/form-validation';
@@ -44,7 +41,6 @@ export default function AdmissionsPage() {
     e.preventDefault();
 
     if (isHoneypotFilled(formData.website)) {
-      console.warn('Honeypot triggered - bot detected');
       return;
     }
 
@@ -71,10 +67,13 @@ export default function AdmissionsPage() {
     setSubmitMessage('');
 
     try {
-      // PLACEHOLDER: Replace with actual Formspree endpoint URL after user setup
-      const FORMSPREE_ENDPOINT = 'https://formspree.io/f/YOUR_FORM_ID_HERE';
+      const formspreeEndpoint = process.env.NEXT_PUBLIC_FORMSPREE_ADMISSIONS_ENDPOINT;
 
-      const response = await fetch(FORMSPREE_ENDPOINT, {
+      if (!formspreeEndpoint) {
+        throw new Error('Admissions form endpoint is not configured');
+      }
+
+      const response = await fetch(formspreeEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -105,8 +104,7 @@ export default function AdmissionsPage() {
       } else {
         throw new Error('Form submission failed');
       }
-    } catch (error) {
-      console.error('Form submission error:', error);
+    } catch {
       setSubmitStatus('error');
       setSubmitMessage('Sorry, there was an error submitting your inquiry. Please try again or email us directly at admissions@stelizabeth.edu.in.');
     } finally {
