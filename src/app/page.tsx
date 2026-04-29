@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useMotionHorizontalScroll } from '@/lib/hooks/useMotionHorizontalScroll';
 import { HeroMasked } from "@/components/sections/HeroMasked";
+import { HomepageIntro } from '@/components/sections/HomepageIntro';
 import { StickySplitSection } from "@/components/sections/StickySplitSection";
 import { WalkHeader } from "@/components/layout/WalkHeader";
 import { SkeletonLoader } from "@/components/ui/SkeletonLoader";
+import { useFirstVisit } from '@/lib/hooks/useFirstVisit';
 
 // PLACEHOLDER: Using Walker School images until St. Elizabeth photos provided
 const IMAGES = {
@@ -605,6 +607,8 @@ function HomeHorizontalScroll() {
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
+  const [introDismissed, setIntroDismissed] = useState(false);
+  const { isFirstVisit, markVisitComplete, ready } = useFirstVisit('homepage-intro-seen');
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -612,7 +616,14 @@ export default function Home() {
     });
   }, []);
 
-  if (!mounted) {
+  const showIntro = mounted && ready && isFirstVisit && !introDismissed;
+
+  const handleIntroComplete = () => {
+    markVisitComplete();
+    setIntroDismissed(true);
+  };
+
+  if (!mounted || !ready) {
     return (
       <main>
         <SkeletonLoader variant="section" />
@@ -620,5 +631,15 @@ export default function Home() {
     );
   }
 
-  return <HomeHorizontalScroll />;
+  return (
+    <main>
+      {showIntro ? (
+        <HomepageIntro
+          imageSrc={IMAGES.heroCampus}
+          onComplete={handleIntroComplete}
+        />
+      ) : null}
+      <HomeHorizontalScroll />
+    </main>
+  );
 }
