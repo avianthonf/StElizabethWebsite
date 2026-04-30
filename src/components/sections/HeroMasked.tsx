@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { motion, MotionValue, useTransform } from 'framer-motion';
 
 /**
@@ -15,17 +15,41 @@ import { motion, MotionValue, useTransform } from 'framer-motion';
  * The mask exposes the video only where the text letter shapes are.
  *
  * Uses Framer Motion's useTransform to map scroll progress to animation values.
+ *
+ * Features:
+ * - Video background (autoplay, muted, loop) when heroVideo provided
+ * - Falls back to static image (heroImage) as poster/fallback
+ * - Respects prefers-reduced-motion
  */
 export function HeroMasked({
   heroImage = '/images/videocover2-812-optimized.webp',
+  heroVideo,
   scrollYProgress
 }: {
   heroImage?: string;
+  heroVideo?: string;
   scrollYProgress?: MotionValue<number>;
 }) {
   const maskGroupRef = useRef<SVGGElement>(null);
   const wallRef = useRef<SVGRectElement>(null);
   const missionRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [videoError, setVideoError] = useState(false);
+
+  // Check for reduced motion preference
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReducedMotion(mediaQuery.matches);
+    
+    const handleChange = (e: MediaQueryListEvent) => {
+      setPrefersReducedMotion(e.matches);
+    };
+    
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
 
   // Hero animates during first 18% of scroll
   const heroProgressEnd = 0.18;
@@ -48,6 +72,9 @@ export function HeroMasked({
     [0, 0, 1]
   );
 
+  // Determine whether to show video
+  const showVideo = heroVideo && !prefersReducedMotion && !videoError;
+
   return (
     <section
       style={{
@@ -58,20 +85,44 @@ export function HeroMasked({
         backgroundColor: 'var(--color-text-dark)',
       }}
     >
-      {/* ── 1. Background Image / Video ───────────────────────────────── */}
-      <img
-        src={heroImage}
-        alt="St. Elizabeth High School campus"
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          objectPosition: 'center',
-        }}
-      />
+      {/* ── 1. Background Video or Image ───────────────────────────────── */}
+      {showVideo ? (
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          loop
+          playsInline
+          poster={heroImage}
+          onError={() => setVideoError(true)}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center',
+          }}
+        >
+          <source src={heroVideo} type="video/mp4" />
+          {/* Fallback message for browsers without video support */}
+          Your browser does not support the video tag.
+        </video>
+      ) : (
+        <img
+          src={heroImage}
+          alt="St. Elizabeth High School campus"
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center',
+          }}
+        />
+      )}
 
       {/* ── 2. SVG Mask Overlay ───────────────────────────────────────────
           Mask logic (SVG spec):

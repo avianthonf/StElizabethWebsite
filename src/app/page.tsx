@@ -7,10 +7,17 @@ import { HeroMasked } from "@/components/sections/HeroMasked";
 import { HomepageIntro } from '@/components/sections/HomepageIntro';
 import { StickySplitSection } from "@/components/sections/StickySplitSection";
 import { WalkHeader } from "@/components/layout/WalkHeader";
+import { AlertBanner } from "@/components/layout/AlertBanner";
+import { ValuesCarousel } from "@/components/sections/ValuesCarousel";
 import { SkeletonLoader } from "@/components/ui/SkeletonLoader";
 import { useFirstVisit } from '@/lib/hooks/useFirstVisit';
 
 // PLACEHOLDER: Using Walker School images until St. Elizabeth photos provided
+const VIDEOS = {
+  heroVideo: "/videos/hero-campus.mp4", // Video background for hero section
+  admissionVideo: "/videos/hero-campus.mp4", // Video background for footer CTA
+};
+
 const IMAGES = {
   heroCampus: "/images/videocover2-812-optimized.webp",
   faith: "/images/Curiosity-310-optimized.webp",
@@ -377,6 +384,12 @@ function HomeHorizontalScroll() {
 
   return (
     <>
+      <AlertBanner
+        message="Admissions Open for 2026-27 Academic Year"
+        ctaText="Apply Now"
+        ctaHref="/admissions/apply"
+        storageKey="admissions-alert-2026"
+      />
       <WalkHeader />
 
       {/* Tall container creates scroll space (400vh = 4x viewport) */}
@@ -401,7 +414,11 @@ function HomeHorizontalScroll() {
           >
             {/* SECTION 1: Hero */}
             <div style={{ minWidth: '100vw', height: '100vh', flexShrink: 0, overflow: 'hidden' }}>
-              <HeroMasked heroImage={IMAGES.heroCampus} scrollYProgress={scrollYProgress} />
+              <HeroMasked 
+                heroImage={IMAGES.heroCampus} 
+                heroVideo={VIDEOS.heroVideo}
+                scrollYProgress={scrollYProgress} 
+              />
             </div>
 
           {/* SECTION 2: We Value */}
